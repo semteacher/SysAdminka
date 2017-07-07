@@ -6,6 +6,7 @@ use Cake\Network\Request;
 use Cake\Network\Http\Client;;
 
 include_once('Firebird/class_firebird.php');
+include_once('Firebird/class_firebird_asu_mkr.php');
 include_once('Component/Google_Api/autoload.php');
 include_once ('Component/Google_Api/src/Google/Client.php');
 include_once ('Component/Google_Api/src/Google/Sevice/Oauth2.php');
@@ -13,6 +14,7 @@ include_once ('Component/Google_Api/src/Google/Auth/AssertionCredentials.php');
 include_once('Component/CsvComponent.php');
 
 use class_ibase_fb;
+use class_ibase_fb_asu_mkr;
 use Google_Client;
 use Google_Auth_AssertionCredentials;
 use Google_Service_Directory;
@@ -162,7 +164,13 @@ class SyncController extends AppController
         if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to Contingent not found!!!');
     }
 
-
+    private function _test_ping_asu_mkr(){
+        $this->test = $this->contingent->gets("
+			SELECT First 1 ST1 AS STUDENTID
+			FROM ST inner join std on (st.st1 = std.std2) WHERE (STD11<>2)OR(STD11<>4)");
+        if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to Contingent not found!!!');
+    }
+    
     /*
      *
      * function for connect with directory Api Google
