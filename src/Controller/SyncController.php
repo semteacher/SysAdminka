@@ -279,9 +279,11 @@ class SyncController extends AppController
 
     public function contingent(){
     $this->_test_ping();
+    $this->_test_ping_asu_mkr();
         if ($this->request->is('post')) {
             if ($this->request->data(['special'])==on){
                 $this->_get_speciality();
+                $this->_get_speciality_asu_mkr();
                 $this->_sync_C_with_LDB_spec();
             }
             if ($this->request->data['archive']==on){
