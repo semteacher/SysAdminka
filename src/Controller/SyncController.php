@@ -166,16 +166,47 @@ class SyncController extends AppController
         if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to Contingent not found!!!');
     }
 
+    private function _get_students_asu_mkr(){
+        $this->students_mkr= $this->asu_mkr->gets("
+select 
+    f.f1,    
+    st.st2,
+    st.st3,
+    st.st4,
+    st.st74,
+    st.st75,
+    st.st76,    
+    gr.gr3,
+    std.std7,
+    std.std11,
+    pnsp.pnsp1,
+    sp.sp1
+from st
+   inner join std on (st.st1 = std.std2)
+   inner join gr on (std.std3 = gr.gr1)
+   inner join sg on (gr.gr2 = sg.sg1)
+   inner join sp on (sg.sg2 = sp.sp1)
+   inner join pnsp on (sp.sp11 = pnsp.pnsp1)
+   inner join f on (sp.sp5 = f.f1)
+where 
+   (
+      (std.std7 is null )
+   and 
+      (std.std11 <> 1)
+   )
+            ");
+    }
+    
     private function _get_speciality_asu_mkr(){
         $this->speciality_mkr = $this->asu_mkr->gets("
-            SELECT DISTINKT PNSP.PNSP1 AS SPECIALITYID, PNSP.PNSP2 AS SPECIALITY, SP.SP4 AS CODE FROM PNSP inner join SP ON (PNSP.PNSP1=SP.SP11)
-            ");
+            SELECT PNSP.PNSP1 AS SPECIALITYID, PNSP.PNSP2 AS SPECIALITY, SP.SP4 AS CODE FROM PNSP inner join SP ON (PNSP.PNSP1=SP.SP11)
+            ");            
     }
     
     private function _test_ping_asu_mkr(){
         $this->test_mkr = $this->asu_mkr->gets("
 			SELECT First 1 ST.ST1 AS STUDENTID
-			FROM ST inner join std on (st.st1 = std.std2) WHERE (STD11<>2)OR(STD11<>4)
+			FROM ST inner join std on (st.st1 = std.std2) WHERE (std7 is null)AND((STD11<>2)OR(STD11<>4))
             ");
         if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to Contingent not found!!!');
     }
@@ -291,10 +322,12 @@ class SyncController extends AppController
             }
             if ($this->request->data(['all_students'])==on){
                  $this->_get_students();
+                 $this->_get_students_asu_mkr();
                  $this->_sync_C_with_LDB_users();
             }
             if ($this->request->data['photo']==on){
                 $this->_get_students();
+                $this->_get_students_asu_mkr();
                 $this->_sync_C_with_LDB_photo();
             }
             if ($this->request->data['google_photo']==on){
