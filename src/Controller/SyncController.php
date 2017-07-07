@@ -133,6 +133,8 @@ class SyncController extends AppController
         $this->Auth->allow('api');
         $this->contingent = new class_ibase_fb();
         $this->contingent->sql_connect();
+        $this->asu_mkr = new class_ibase_fb_asu_mkr(); //connect to ASU_MKR
+        $this->asu_mkr->sql_connect();        
         $this->options_csv = [
             'length' => 0,
             'delimiter' => ',',
@@ -164,10 +166,17 @@ class SyncController extends AppController
         if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to Contingent not found!!!');
     }
 
+    private function _get_speciality_asu_mkr(){
+        $this->speciality_mkr = $this->asu_mkr->gets("
+            SELECT DISTINKT PNSP.PNSP1 AS SPECIALITYID, PNSP.PNSP2 AS SPECIALITY, SP.SP4 AS CODE FROM PNSP inner join SP ON (PNSP.PNSP1=SP.SP11)
+            ");
+    }
+    
     private function _test_ping_asu_mkr(){
-        $this->test = $this->contingent->gets("
-			SELECT First 1 ST1 AS STUDENTID
-			FROM ST inner join std on (st.st1 = std.std2) WHERE (STD11<>2)OR(STD11<>4)");
+        $this->test_mkr = $this->asu_mkr->gets("
+			SELECT First 1 ST.ST1 AS STUDENTID
+			FROM ST inner join std on (st.st1 = std.std2) WHERE (STD11<>2)OR(STD11<>4)
+            ");
         if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to Contingent not found!!!');
     }
     
