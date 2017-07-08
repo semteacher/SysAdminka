@@ -5,12 +5,14 @@
            data-length-change="false"
            data-info="true"
            data-paging="true"
-           data-page-length="10">
+           data-page-length="20">
     <thead>
         <tr>
-            <th data-filterable="text" ><?= $this->Paginator->sort('special_id') ?></th>
-            <th data-filterable="text"><?= $this->Paginator->sort('name') ?></th>
-            <th data-filterable="text" ><?= $this->Paginator->sort('code') ?></th>
+            <th data-filterable="text" data-sortable="true" style = "width:50px !important;"><?= $this->Paginator->sort('special_id') ?></th>
+            <th data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('name') ?></th>
+            <th data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('code') ?></th>
+            <th data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('pnsp_id') ?></th>
+            <th data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('sp_id') ?></th>
             <th class="actions"><?= __('Actions') ?></th>
         </tr>
     </thead>
@@ -20,6 +22,8 @@
             <td><?= $this->Number->format($special->special_id) ?></td>
             <td><?= $this->Text->autoParagraph(h($special->name))?></td>
             <td><?= $this->Text->autoParagraph(h($special->code))?></td>
+            <td><?= $this->Number->format($special->pnsp_id) ?></td>
+            <td><?= $this->Number->format($special->sp_id) ?></td>
             <td class="actions">
                 <?= $this->Html->link(__('Edit'), ['action' => 'edit',  $special->special_id],['class'=>'btn btn-warning']) ?>
                 <?= $this->Html->link(__('Delete'), ['action' => 'delete', $special->special_id],['class'=>'btn btn-danger']) ?>

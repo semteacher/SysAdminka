@@ -13,6 +13,14 @@
         <?php
             echo $this->Form->input('code',['class'=>'form-control','type'=>'text']);
         ?>
+        <fieldset <?= $disabled ?>>
+            <?php
+                echo $this->Form->input('pnsp_id',['class'=>'form-control','type'=>'text']);
+            ?>
+            <?php
+                echo $this->Form->input('sp_id',['class'=>'form-control','type'=>'text']);
+            ?>
+        </fieldset>        
     </fieldset>
     <br/>
     <?= $this->Form->button(__('Submit'),['class'=>'btn btn-success']) ?>
