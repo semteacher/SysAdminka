@@ -199,7 +199,7 @@ where
     
     private function _get_speciality_asu_mkr(){
         $this->speciality_mkr = $this->asu_mkr->gets("
-            SELECT PNSP.PNSP1 AS SPECIALITYID, PNSP.PNSP2 AS SPECIALITY, SP.SP4 AS CODE FROM PNSP inner join SP ON (PNSP.PNSP1=SP.SP11)
+            SELECT SP.SP1 AS SP_ID, PNSP.PNSP1 AS PNSP_ID, PNSP.PNSP2 AS SPECIALITY, SP.SP4 AS CODE FROM PNSP inner join SP ON (PNSP.PNSP1=SP.SP11)
             ");            
     }
     
@@ -208,7 +208,7 @@ where
 			SELECT First 1 ST.ST1 AS STUDENTID
 			FROM ST inner join std on (st.st1 = std.std2) WHERE (std7 is null)AND((STD11<>2)OR(STD11<>4))
             ");
-        if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to Contingent not found!!!');
+        if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to ASU MKR not found!!!');
     }
     
     /*
