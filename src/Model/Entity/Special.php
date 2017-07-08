@@ -18,6 +18,8 @@ class Special extends Entity
         'name' => true,
         'special_id' => true,
         'code' => true,
+        'pnsp_id' => true,
+        'sp_id' => true,
     ];
 
 //    protected function _getName()
