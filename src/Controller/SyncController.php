@@ -315,7 +315,8 @@ where
             if ($this->request->data(['special'])==on){
                 $this->_get_speciality();
                 $this->_get_speciality_asu_mkr();
-                $this->_sync_C_with_LDB_spec();
+                $this->_sync_ASU_with_LDB_spec();
+                //$this->_sync_C_with_LDB_spec();
             }
             if ($this->request->data['archive']==on){
                 $this->_sync_archive();
@@ -424,7 +425,7 @@ where
                 ->first();
                 if (isset($specials_ldb)){
                     $rename=0;
-                    $data = $this->Specials->find()->where(['special_id'=>$specials_ldb->special_id])->first();;
+                    $data = $this->Specials->find()->where(['special_id'=>$specials_ldb->special_id])->first();
                     if ($speciality_of_contingent['SPECIALITYID']!=$specials_ldb->special_id){
                         $rename++;
                         $data['special_id']=$speciality_of_contingent['SPECIALITYID'];
@@ -637,4 +638,64 @@ where
         $name['fname']=implode(" ", $fullname);
         return $name;
     }
+    
+//==============================ASU MKR===============================================
+    /*
+     * Sync Contingent with Local DataBase
+     * SP_ID, PNSP_ID
+     */
+    private function _sync_ASU_with_LDB_spec(){
+        $this->loadModel('Specials');
+        //debug
+        foreach($this->speciality_mkr as $speciality_of_asu_mkr){
+        var_dump($speciality_of_asu_mkr);
+            $specials_ldb = $this->Specials->find()
+                ->where(['pnsp_id ' => $speciality_of_asu_mkr['PNSP_ID']])
+                ->where(['sp_id ' => $speciality_of_asu_mkr['SP_ID']])
+                ->first();
+        var_dump($specials_ldb);
+        }
+        die();
+        
+        foreach($this->speciality_mkr as $speciality_of_asu_mkr){
+            $specials_ldb = $this->Specials->find()
+                ->where(['pnsp_id ' => $speciality_of_asu_mkr['PNSP_ID']])
+                ->where(['sp_id ' => $speciality_of_asu_mkr['SP_ID']])
+                ->first();
+                if (isset($specials_ldb)){
+                    $rename=0;
+                    $data = $this->Specials->find()->where(['pnsp_id'=>$specials_ldb->pnsp_id, 'sp_id ' => $specials_ldb->sp_id])->first();
+                    if ($speciality_of_asu_mkr['SPECIALITY']!=$specials_ldb->name){
+                        $rename++;
+                        $data['name']=$speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['CODE'].")";
+                    }
+                    if ($speciality_of_asu_mkr['CODE']!=$specials_ldb->code){
+                        $rename++;
+                        $data['code']=$speciality_of_asu_mkr['CODE'];
+                    }
+                    if($rename>0){
+                        if ($this->Specials->save($data)) {
+                            $this->options['rename_specials']++;
+                            $this->status=true;
+//                            $this->message[]['message']='Editing speciality: '.$this->options['rename_specials'];
+                        }
+                    }
+                }else{
+                    $data = $this->Specials->newEntity();
+                    $data['pnsp_id'] = $speciality_of_asu_mkr['PNSP_ID'];
+                    $data['sp_id'] = $speciality_of_asu_mkr['SP_ID'];
+                    $data['name'] = $speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['CODE'].")";
+                    $data['code'] = $speciality_of_asu_mkr['CODE'];
+                    if ($this->Specials->save($data)) {
+                        $this->options['new_specials']++;
+                        $this->status=true;
+//                        $this->message[]['message']='New speciality: '.$this->options['new_specials'];
+
+                    }
+                }
+        }
+        if(($this->options['rename_specials']==0) and ($this->options['new_specials']==0)){
+            $this->message[]['message']="Sorry, there are no new records in ASU MKR databace";
+        }
+    }    
 }
