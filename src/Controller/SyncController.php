@@ -169,7 +169,8 @@ class SyncController extends AppController
     private function _get_students_asu_mkr(){
         $this->students_mkr= $this->asu_mkr->gets("
 select 
-    f.f1,    
+    f.f1,
+    st.st1,
     st.st2,
     st.st3,
     st.st4,
@@ -555,7 +556,7 @@ where
             }
         }
         if(($this->options['rename_student']==0) and ($this->options['new_student']==0)){
-            $this->message[]['message']="Sorry, there are no new records in Contingent databace";
+            $this->message[]['message']="Sorry, there are no new records in Contingent database";
         }
         if (count($new_student_for_email)>0){
             $this->send_email($new_student_for_email,"New students in SysAdmin!");
@@ -641,7 +642,7 @@ where
     
 //==============================ASU MKR===============================================
     /*
-     * Sync Contingent with Local DataBase
+     * Sync ASU MKR with Local DataBase
      * SP_ID, PNSP_ID
      */
     private function _sync_ASU_with_LDB_spec(){
@@ -695,7 +696,145 @@ where
                 }
         }
         if(($this->options['rename_specials']==0) and ($this->options['new_specials']==0)){
-            $this->message[]['message']="Sorry, there are no new records in ASU MKR databace";
+            $this->message[]['message']="Sorry, there are no new records in ASU MKR database";
         }
-    }    
+    }
+    
+    /*
+     * Sync Students from ASU MKR into Local DataBase
+     */
+    private function _sync_ASU_with_LDB_users(){
+        $this->loadModel('Students');
+        $this->_max_id();
+        foreach($this->students as $student_of_asu_mkr){
+            $student_ldb = $this->Students->find()
+                ->where(['student_id ' => $student_of_asu_mkr['ST1']])
+                ->first();
+            if ($student_of_asu_mkr['STATUS']=='С'){ //TODO: find it, if possible or remove?
+                if (isset($student_ldb)){
+                    $rename=0;
+
+                    //Prepare and clean-up names on Ukrainian or English
+                    if ($student_of_asu_mkr['ST74']!=null) {
+                        $name['lname'] = $this->_name_cleanup($student_of_asu_mkr['ST74']);
+                    } else {
+                        $name['lname'] = $this->_name_cleanup($student_of_asu_mkr['ST2']);
+                    }
+                    $name['uname'] = $this->_create_username($name['lname'])."_"; //start username as lastname in English
+                    if ($student_of_asu_mkr['ST75']!=null) {
+                        $name['fname'] = $this->_name_cleanup($student_of_asu_mkr['ST75']);
+                        $name['uname'] = $name['uname'].$name['fname'][0].$name['fname'][1].$name['fname'][2].$name['fname'][3];
+                        if ($student_of_asu_mkr['ST76']!=null) {
+                            $name['fname'] = $name['fname']." ".$this->_name_cleanup($student_of_asu_mkr['ST76']);
+                        }
+                    } else {
+                        $name['fname'] = $this->_name_cleanup($student_of_asu_mkr['ST3'])." ".$this->_name_cleanup($student_of_asu_mkr['ST4']);
+                    }
+                    $tmpname = explode(" ", $name['fname']);
+                    $name['uname'] .= _create_username($tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3].$tmpname[2][0].$tmpname[2][1].$tmpname[2][2].$tmpname[2][3]); //start username as abbreviate in English
+                    
+                    //update existing student's record
+                    $data = $this->Students->get($student_ldb->id);
+                    if ($student_of_asu_mkr['F1']!=$student_ldb->school_id){
+                        $rename++;
+                        $data['school_id']=$student_of_asu_mkr['F1'];
+                    }
+                    if ($student_of_asu_mkr['PNSP_ID']!=$student_ldb->special_id){
+                        $rename++;
+                        $data['pnsp_id']=$student_of_asu_mkr['PNSP_ID'];
+                    }
+                    if ($student_of_asu_mkr['SP_ID']!=$student_ldb->special_id){
+                        $rename++;
+                        $data['sp_id']=$student_of_asu_mkr['SP_ID'];
+                    }
+                    if ($student_of_contingent['SEMESTER']!=$student_ldb->grade_level){ //TODO: where is this? ST71 - for NFAU??
+                        $rename++;
+                        $data['grade_level']=$student_of_contingent['SEMESTER'];
+                    }
+                    if ($student_of_asu_mkr['GR3']!=$student_ldb->groupnum){
+                        $rename++;
+                        $data['groupnum']=$student_of_asu_mkr['GR3'];
+                    }
+                    if ($name['fname']!=$student_ldb->first_name){
+                        $rename++;
+                        $data['first_name']=$name['fname'];
+                    }
+                    if ($name['lname']!=$student_ldb->last_name){
+                        $rename++;
+                        $data['last_name']=$name['lname'];
+                    }
+                    if ($student_of_contingent['ARCHIVE']==true and $student_ldb->status_id!=10){//TODO: how to get this?
+                        $rename++;
+                        $data['status_id'] = 10;
+                        $this->options['archive_student']++;
+                    }else if ($student_of_contingent['ARCHIVE']==false and $student_ldb->status_id==10){
+                        $rename++;
+                        $data['status_id'] = 1;
+                    }
+                        if($rename>0){
+
+                            if ($this->Students->save($data)) {
+                                $this->options['rename_student']++;
+                                $this->status=true;
+//                                $this->message[]['message']='Editing students: '.$this->options['rename_student'];
+                            }
+                        }
+
+                }else{
+                    //add a new student
+                    $data = $this->Students->newEntity();
+                    $data['student_id'] = $student_of_asu_mkr['ST1'];
+                    $data['school_id'] = $student_of_asu_mkr['F1'];
+                    $data['pnsp_id'] = $student_of_asu_mkr['PNSP_ID'];
+                    $data['sp_id'] = $student_of_asu_mkr['SP_ID'];
+                    $data['groupnum'] = $student_of_asu_mkr['GR3'];
+                    $data['first_name'] = $name['fname'];
+                    $data['last_name'] = $name['lname'];
+                    $data['user_name'] = $name['uname'];
+                    $data['grade_level'] = $student_of_contingent['SEMESTER'];
+                    $data['password'] = $this->_generate_pass();
+                    $student_of_contingent['ARCHIVE']==1 ?  $data['status_id'] = 10 :  $data['status_id'] = 1;
+
+                    $student_login_clone = $this->Students->find()
+                        ->where(['user_name' => $name['uname']])
+                        ->first();
+
+                    if (isset($student_login_clone)){
+                        $data['status_id'] = 3;
+                        $this->options['clone_login_in students']++;
+                    }
+
+                    if ($this->Students->save($data)) {
+                        $new_student_for_email++;
+                        $this->options['new_student']++;
+                        $this->status=true;
+//                        $this->message[]['message']='New students: '.$this->options['new_student'];
+                    }
+                }
+            }
+        }
+        if(($this->options['rename_student']==0) and ($this->options['new_student']==0)){
+            $this->message[]['message']="Sorry, there are no new records in ASU MKR database";
+        }
+        if (count($new_student_for_email)>0){
+            $this->send_email($new_student_for_email,"New students in SysAdmin!");
+        }
+    }
+    
+    /*
+     * clean-up string (especially - for names clean-up)
+     */
+    private function _name_cleanup($str){
+        if ($str[0]==' '){$str = substr($str, 1);}  //TODO: Remove all leading and trailing spaces 
+        $str = str_replace("(","",$str);
+        $str = str_replace(")","",$str);
+        $str = str_replace("-","",$str);
+        $str = str_replace("'","",$str);
+        $str = str_replace(":","",$str);
+        $str = str_replace(".","",$str);
+        $str = str_replace("`","",$str);
+        $str = str_replace("\"","",$str);
+        
+        return $str;
+    }
 }
