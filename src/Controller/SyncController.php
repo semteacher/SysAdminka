@@ -315,17 +315,25 @@ where
         if ($this->request->is('post')) {
             if ($this->request->data(['special'])==on){
                 $this->_get_speciality();
+                //$this->_get_speciality_asu_mkr();
+                //$this->_sync_ASU_with_LDB_spec();
+                $this->_sync_C_with_LDB_spec();
+            }
+            if ($this->request->data(['specials_asumkr'])==on){
                 $this->_get_speciality_asu_mkr();
                 $this->_sync_ASU_with_LDB_spec();
-                //$this->_sync_C_with_LDB_spec();
             }
             if ($this->request->data['archive']==on){
                 $this->_sync_archive();
             }
             if ($this->request->data(['all_students'])==on){
                  $this->_get_students();
-                 $this->_get_students_asu_mkr();
+                 //$this->_get_students_asu_mkr();
                  $this->_sync_C_with_LDB_users();
+            }
+            if ($this->request->data(['all_students_asumkr'])==on){
+                 $this->_get_students_asu_mkr();
+                 $this->_sync_ASU_with_LDB_users();
             }
             if ($this->request->data['photo']==on){
                 $this->_get_students();
