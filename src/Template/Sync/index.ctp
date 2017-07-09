@@ -53,7 +53,7 @@
                                 ]);?>
                                 <div class="caption">
                                     <h3 class="">Get specialyty from Contingent</h3>
-                                    <p class="alert alert-info">It syncs all speciality, what have status "use" in contingent.</p>
+                                    <p class="alert alert-info">Syncs all specialities with status "use" in Contingent</p>
                                     <div class="checkbox">
                                         <label>
                                             <input type="checkbox" name="special" style="width:50px;height: 40px;">
@@ -62,7 +62,7 @@
                                 </div>
                                 </label>
                             </div>
-                        </div>
+                        </div>                        
                         <div class="col-sm-6 col-md-3">
                              <div class="thumbnail sync">
                                  <fieldset >
@@ -84,6 +84,46 @@
                                  </fieldset>
                              </div>
                              </div>
+                </div>
+                <div class="row">
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+                                <?= $this->Html->image("Sync.png", [
+                                    "alt" => "Sync",
+                                    "class"=>"col-xs-12 hidden-xs"
+                                ]);?>
+                                <div class="caption">
+                                    <h3 class="">Get specialyty from ASU MKR</h3>
+                                    <p class="alert alert-info">Syncs all specialities with status "use" in ASU MKR.</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="specials_asumkr" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+                                    <?= $this->Html->image("SyncUser.png", [
+                                        "alt" => "Sync",
+                                        "class"=>"col-xs-12 hidden-xs "
+                                    ]);?>
+                                <div class="caption">
+                                    <h3 class="">Get each student from ASU MKR</h3>
+                                   <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="all_students_asumkr" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
                 </div>
                 <div class="row">
                     <div class="col-sm-6 col-md-3">
