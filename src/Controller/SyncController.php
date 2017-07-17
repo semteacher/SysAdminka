@@ -165,38 +165,6 @@ class SyncController extends AppController
 			FROM STUDENTS WHERE ARCHIVE=0");
         if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to Contingent not found!!!');
     }
-
-    private function _get_students_asu_mkr(){
-        $this->students_mkr= $this->asu_mkr->gets("
-select 
-    f.f1,
-    st.st1,
-    st.st2,
-    st.st3,
-    st.st4,
-    st.st74,
-    st.st75,
-    st.st76,    
-    gr.gr3,
-    std.std7,
-    std.std11,
-    pnsp.pnsp1,
-    sp.sp1
-from st
-   inner join std on (st.st1 = std.std2)
-   inner join gr on (std.std3 = gr.gr1)
-   inner join sg on (gr.gr2 = sg.sg1)
-   inner join sp on (sg.sg2 = sp.sp1)
-   inner join pnsp on (sp.sp11 = pnsp.pnsp1)
-   inner join f on (sp.sp5 = f.f1)
-where 
-   (
-      (std.std7 is null )
-   and 
-      (std.std11 <> 1)
-   )
-            ");
-    }
     
     /*
      *
@@ -657,6 +625,44 @@ where
     }
     
     /*
+     * Get students form ASU MKR DataBase
+     */
+    private function _get_students_asu_mkr(){
+    // TODO: get all students and check status (std.std7 and std.std11) on sync?????!!!!!!!
+        $this->students_mkr= $this->asu_mkr->gets("
+select 
+    f.f1,
+    st.st1,
+    st.st2,
+    st.st3,
+    st.st4,
+    st.st74, 
+    st.st75, 
+    st.st76, 
+    st.st144,
+    st.st149,
+    gr.gr3,
+    std.std7,
+    std.std11,
+    pnsp.pnsp1,
+    sp.sp1
+from st
+   inner join std on (st.st1 = std.std2)
+   inner join gr on (std.std3 = gr.gr1)
+   inner join sg on (gr.gr2 = sg.sg1)
+   inner join sp on (sg.sg2 = sp.sp1)
+   inner join pnsp on (sp.sp11 = pnsp.pnsp1)
+   inner join f on (sp.sp5 = f.f1)
+where 
+   (
+      (std.std7 is null )
+   and 
+      (std.std11 <> 1)
+   )
+            ");
+    }
+    
+    /*
      * Sync ASU MKR specialities with Local DataBase
      * SP_ID, PNSP_ID
      */
@@ -712,10 +718,20 @@ where
         $this->loadModel('Students');
         $this->_max_id();
         foreach($this->students as $student_of_asu_mkr){
-            $student_ldb = $this->Students->find()
-                ->where(['student_id ' => $student_of_asu_mkr['ST1']])
-                ->first();
-            if ($student_of_asu_mkr['STATUS']=='С'){ //TODO: find it, if possible or remove?
+            
+            // search Local Database for an existing user:
+            if ($student_of_asu_mkr['ST149']){      // get existing user by Contingent ID
+                //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST149!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                $student_ldb = $this->Students->find()
+                    ->where(['student_id' => $student_of_asu_mkr['ST149']])
+                    ->first();
+            } else {                               // get existing user by ASU MKR ID
+                $student_ldb = $this->Students->find()
+                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']])
+                    ->first();            
+            }
+            
+            if ($student_of_asu_mkr['std11']==0){ //student!
                 if (isset($student_ldb)){
                     $rename=0;
 
@@ -740,21 +756,21 @@ where
                     
                     //update existing student's record
                     $data = $this->Students->get($student_ldb->id);
-                    if ($student_of_asu_mkr['F1']!=$student_ldb->school_id){
+                    if ($student_of_asu_mkr['F1']!=$student_ldb->f_id){
                         $rename++;
-                        $data['school_id']=$student_of_asu_mkr['F1'];
+                        $data['f_id']=$student_of_asu_mkr['F1'];
                     }
-                    if ($student_of_asu_mkr['PNSP_ID']!=$student_ldb->special_id){
+                    if ($student_of_asu_mkr['PNSP_ID']!=$student_ldb->pnsp_id){
                         $rename++;
                         $data['pnsp_id']=$student_of_asu_mkr['PNSP_ID'];
                     }
-                    if ($student_of_asu_mkr['SP_ID']!=$student_ldb->special_id){
+                    if ($student_of_asu_mkr['SP_ID']!=$student_ldb->sp_id){
                         $rename++;
                         $data['sp_id']=$student_of_asu_mkr['SP_ID'];
                     }
-                    if ($student_of_contingent['SEMESTER']!=$student_ldb->grade_level){ //TODO: where is this? ST71 - for NFAU??
+                    if ($student_of_asu_mkr['ST71']!=$student_ldb->grade_level){ //TODO: where is this? ST71 - for NFAU??
                         $rename++;
-                        $data['grade_level']=$student_of_contingent['SEMESTER'];
+                        $data['grade_level']=$student_of_asu_mkr['ST71'];
                     }
                     if ($student_of_asu_mkr['GR3']!=$student_ldb->groupnum){
                         $rename++;
@@ -768,37 +784,38 @@ where
                         $rename++;
                         $data['last_name']=$name['lname'];
                     }
-                    if ($student_of_contingent['ARCHIVE']==true and $student_ldb->status_id!=10){//TODO: how to get this?
-                        $rename++;
-                        $data['status_id'] = 10;
-                        $this->options['archive_student']++;
-                    }else if ($student_of_contingent['ARCHIVE']==false and $student_ldb->status_id==10){
-                        $rename++;
-                        $data['status_id'] = 1;
-                    }
-                        if($rename>0){
+                    //if ($student_of_asu_mkr['ARCHIVE']==true and $student_ldb->status_id!=10){//TODO: how to get this?
+                    //    $rename++;
+                    //    $data['status_id'] = 10;
+                    //    $this->options['archive_student']++;
+                    //}else if ($student_of_asu_mkr['ARCHIVE']==false and $student_ldb->status_id==10){
+                    //    $rename++;
+                    //    $data['status_id'] = 1;
+                    //}
+                    
+                    if($rename>0){
 
                             if ($this->Students->save($data)) {
                                 $this->options['rename_student']++;
                                 $this->status=true;
 //                                $this->message[]['message']='Editing students: '.$this->options['rename_student'];
                             }
-                        }
+                    }
 
                 }else{
                     //add a new student
                     $data = $this->Students->newEntity();
-                    $data['student_id'] = $student_of_asu_mkr['ST1'];
-                    $data['school_id'] = $student_of_asu_mkr['F1'];
+                    $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
+                    $data['f_id'] = $student_of_asu_mkr['F1'];
                     $data['pnsp_id'] = $student_of_asu_mkr['PNSP_ID'];
                     $data['sp_id'] = $student_of_asu_mkr['SP_ID'];
                     $data['groupnum'] = $student_of_asu_mkr['GR3'];
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
                     $data['user_name'] = $name['uname'];
-                    $data['grade_level'] = $student_of_contingent['SEMESTER'];
+                    $data['grade_level'] = $student_of_asu_mkr['ST71'];
                     $data['password'] = $this->_generate_pass();
-                    $student_of_contingent['ARCHIVE']==1 ?  $data['status_id'] = 10 :  $data['status_id'] = 1;
+                    $student_of_asu_mkr['std11']==0 ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
 
                     $student_login_clone = $this->Students->find()
                         ->where(['user_name' => $name['uname']])
