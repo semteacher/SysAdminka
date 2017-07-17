@@ -843,6 +843,15 @@ where
         }
     }
     
+    private function _initial_update_ldb_ids {
+        // TODO: Update faculties id's. Execute once - no more necessary
+        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`);";
+        // TODO: update specialities id's. Execute once - no more necessary
+        $updatespeciality_sql = "UPDATE `students` SET 
+            `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
+            `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);";
+    }
+    
     /*
      * clean-up string (especially - for names clean-up)
      */
