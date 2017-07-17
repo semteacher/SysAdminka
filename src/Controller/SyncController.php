@@ -198,20 +198,6 @@ where
             ");
     }
     
-    private function _get_speciality_asu_mkr(){
-        $this->speciality_mkr = $this->asu_mkr->gets("
-            SELECT SP.SP1 AS SP_ID, PNSP.PNSP1 AS PNSP_ID, PNSP.PNSP2 AS SPECIALITY, SP.SP4 AS CODE FROM PNSP inner join SP ON (PNSP.PNSP1=SP.SP11)
-            ");            
-    }
-    
-    private function _test_ping_asu_mkr(){
-        $this->test_mkr = $this->asu_mkr->gets("
-			SELECT First 1 ST.ST1 AS STUDENTID
-			FROM ST inner join std on (st.st1 = std.std2) WHERE (std7 is null)AND((STD11<>2)OR(STD11<>4))
-            ");
-        if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to ASU MKR not found!!!');
-    }
-    
     /*
      *
      * function for connect with directory Api Google
@@ -650,33 +636,44 @@ where
     
 //==============================ASU MKR===============================================
     /*
-     * Sync ASU MKR with Local DataBase
+     * Check ASU MKR database connect
+     */
+    private function _test_ping_asu_mkr(){
+        $this->test_mkr = $this->asu_mkr->gets("
+			SELECT First 1 ST.ST1 AS STUDENTID
+			FROM ST inner join std on (st.st1 = std.std2) WHERE (std7 is null)AND((STD11<>2)OR(STD11<>4))
+            ");
+        if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to ASU MKR not found!!!');
+    }
+    
+    /*
+     * Get specialities from ASU MKR
+     * SP_ID, PNSP_ID
+     */
+    private function _get_speciality_asu_mkr(){
+        $this->speciality_mkr = $this->asu_mkr->gets("
+            SELECT SP.SP1 AS SP_ID, PNSP.PNSP1 AS PNSP_ID, PNSP.PNSP2 AS SPECIALITY, SP.SP2 AS SPECIALITY2, SP.SP4 AS CODE FROM SP inner join PNSP ON (PNSP.PNSP1=SP.SP11) WHERE  SP.SP1>0
+            ");
+    }
+    
+    /*
+     * Sync ASU MKR specialities with Local DataBase
      * SP_ID, PNSP_ID
      */
     private function _sync_ASU_with_LDB_spec(){
         $this->loadModel('Specials');
-        //debug
-        foreach($this->speciality_mkr as $speciality_of_asu_mkr){
-        var_dump($speciality_of_asu_mkr);
-            $specials_ldb = $this->Specials->find()
-                ->where(['pnsp_id ' => $speciality_of_asu_mkr['PNSP_ID']])
-                ->where(['sp_id ' => $speciality_of_asu_mkr['SP_ID']])
-                ->first();
-        var_dump($specials_ldb);
-        }
-        die();
-        
         foreach($this->speciality_mkr as $speciality_of_asu_mkr){
             $specials_ldb = $this->Specials->find()
                 ->where(['pnsp_id ' => $speciality_of_asu_mkr['PNSP_ID']])
                 ->where(['sp_id ' => $speciality_of_asu_mkr['SP_ID']])
                 ->first();
+
                 if (isset($specials_ldb)){
                     $rename=0;
                     $data = $this->Specials->find()->where(['pnsp_id'=>$specials_ldb->pnsp_id, 'sp_id ' => $specials_ldb->sp_id])->first();
                     if ($speciality_of_asu_mkr['SPECIALITY']!=$specials_ldb->name){
                         $rename++;
-                        $data['name']=$speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['CODE'].")";
+                        $data['name']=$speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['SPECIALITY2']." ".$speciality_of_asu_mkr['CODE'].")";
                     }
                     if ($speciality_of_asu_mkr['CODE']!=$specials_ldb->code){
                         $rename++;
@@ -693,7 +690,7 @@ where
                     $data = $this->Specials->newEntity();
                     $data['pnsp_id'] = $speciality_of_asu_mkr['PNSP_ID'];
                     $data['sp_id'] = $speciality_of_asu_mkr['SP_ID'];
-                    $data['name'] = $speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['CODE'].")";
+                    $data['name'] = $speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['SPECIALITY2']." ".$speciality_of_asu_mkr['CODE'].")";
                     $data['code'] = $speciality_of_asu_mkr['CODE'];
                     if ($this->Specials->save($data)) {
                         $this->options['new_specials']++;
