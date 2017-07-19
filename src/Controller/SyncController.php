@@ -289,6 +289,10 @@ class SyncController extends AppController
                  $this->_get_students_asu_mkr();
                  $this->_sync_ASU_with_LDB_users();
             }
+            if ($this->request->data(['init_all_students_asumkr'])==on){
+                 $this->_get_students_asu_mkr();
+                 $this->_initial_update_ldb_students_ids();
+            }
             if ($this->request->data['photo']==on){
                 $this->_get_students();
                 $this->_get_students_asu_mkr();
@@ -621,7 +625,7 @@ class SyncController extends AppController
     private function _get_speciality_asu_mkr(){
         $this->speciality_mkr = $this->asu_mkr->gets("
             SELECT SP.SP1 AS SP_ID, PNSP.PNSP1 AS PNSP_ID, PNSP.PNSP2 AS SPECIALITY, SP.SP2 AS SPECIALITY2, SP.SP4 AS CODE FROM SP inner join PNSP ON (PNSP.PNSP1=SP.SP11) WHERE  SP.SP1>0
-            ");
+            ");          
     }
     
     /*
@@ -654,11 +658,7 @@ from st
    inner join pnsp on (sp.sp11 = pnsp.pnsp1)
    inner join f on (sp.sp5 = f.f1)
 where 
-   (
-      (std.std7 is null )
-   and 
-      (std.std11 <> 1)
-   )
+   (std.std7 is null ) and (std.std11 <> 1) and (st.st2<>'');
             ");
     }
     
@@ -717,7 +717,13 @@ where
     private function _sync_ASU_with_LDB_users(){
         $this->loadModel('Students');
         $this->_max_id();
-        foreach($this->students as $student_of_asu_mkr){
+        //debug only
+        foreach($this->students_mkr as $student_of_asu_mkr){
+var_dump($student_of_asu_mkr['ST2']." ".$student_of_asu_mkr['ST3']." ".$student_of_asu_mkr['ST4']);
+        }
+die();
+        
+        foreach($this->students_mkr as $student_of_asu_mkr){
             
             // search Local Database for an existing user:
             if ($student_of_asu_mkr['ST149']){      // get existing user by Contingent ID
@@ -843,13 +849,105 @@ where
         }
     }
     
-    private function _initial_update_ldb_ids {
+    private function _initial_update_ldb_affiliation_ids() {
         // TODO: Update faculties id's. Execute once - no more necessary
         $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`);";
         // TODO: update specialities id's. Execute once - no more necessary
         $updatespeciality_sql = "UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
             `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);";
+    }
+    
+    private function _initial_update_ldb_students_ids() {
+        //TODO: Get KongingentID from LDB and insert into ASU MKR DB (if found student by full name)
+        $this->loadModel('Students');
+        $this->_max_id();
+        //$students_ldb = $this->Students->find();
+
+        $notfound = 0;
+        $singleinstance = 0;
+        $multipleinstances = 0;
+        
+         $notfound_pos = array();
+         $found_multiple = array();
+        
+        foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
+            if ($student_of_asu_mkr['F1']<>5){ //ukrainians
+                $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
+                $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
+                $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
+            } else {                            //foreign
+                $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST75']);
+                $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST76']);
+                $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST74']);            
+            }
+            
+            $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
+            
+            $found_pos=array();
+            
+var_dump($student_of_asu_mkr['ST1'].": ".$asu_mkr_search_fname." ".$asu_mkr_lname);
+
+            //TODO: need update LDB first - to remove duplication of spaces and trailing spaces....
+            $students_ldb = $this->Students->find('all')
+                ->where(['first_name' => $asu_mkr_search_fname])
+                ->where(['last_name' => $asu_mkr_lname]);
+
+            if (isset($students_ldb)){
+                foreach($students_ldb as $student_ldb){
+                    $found_pos[$student_ldb->id] = $student_ldb->student_id;
+                }
+                if (count($found_pos)==0) {
+                    $notfound++;
+                    $notfound_pos[$student_of_asu_mkr['ST1']] = $asu_mkr_search_fname."-".$asu_mkr_lname;
+var_dump("not found");
+                }elseif(count($found_pos)==1){
+//var_dump("found - single - direct update!");
+                    $singleinstance++;
+                    $found_keys = array_keys($found_pos);
+                    $asu_mkr_update_sql = "UPDATE ST SET ST.ST149=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$found_keys[0].";";
+var_dump("found - single: ".$asu_mkr_update_sql);                    
+                }else{
+var_dump("found - MULTIPLE=".count($found_pos));
+                    $multipleinstances++;
+                    array_merge($found_multiple,$found_pos); //TODO: possible errors on same keys
+                }
+            }
+        }
+var_dump($notfound_pos);        
+        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances;
+        
+/*         foreach ($students_ldb as $student){
+var_dump($student->first_name." ".$student->last_name." ContID=".$student->student_id);
+            if($student->status_id==1||$student->status_id==10||$student->status_id==11){//students + archive + 2facilities study
+                $tmp_fname = explode(" ", $student->first_name);
+                $search_fname = $tmp_fname[0];
+                $search_mname = $tmp_fname[1];
+                $search_lname = $student->last_name;
+                $found_pos=array();
+                foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
+                    $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
+                    $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
+                    $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
+                    if ($asu_mkr_fname == $search_fname && $asu_mkr_lname == $search_lname && $asu_mkr_mname == $search_mname){
+                        $found_pos[$asu_arr_row]=$student_of_asu_mkr['ST1'];
+                        continue;
+                    }
+                }
+//var_dump($found_pos);                
+                if (count($found_pos)==0) {
+var_dump("not found");
+                    $notfound++;
+                }elseif(count($found_pos)==1){
+var_dump("found - single - direct update!");
+                    $singleinstance++;
+                }else{
+var_dump("found - MULTIPLE=".count($found_pos));
+                    $multipleinstances++;
+                }
+            }
+        }
+        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances; */
     }
     
     /*
