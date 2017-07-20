@@ -289,6 +289,9 @@ class SyncController extends AppController
                  $this->_get_students_asu_mkr();
                  $this->_sync_ASU_with_LDB_users();
             }
+            if ($this->request->data(['ldb_names_cleanup'])==on){
+                 $this->_LDB_names_cleanup();
+            }
             if ($this->request->data(['init_all_students_asumkr'])==on){
                  $this->_get_students_asu_mkr();
                  $this->_initial_update_ldb_students_ids();
@@ -859,7 +862,7 @@ die();
     }
     
     private function _initial_update_ldb_students_ids() {
-        //TODO: Get KongingentID from LDB and insert into ASU MKR DB (if found student by full name)
+        // Get CongingentID from LDB and insert into ASU MKR DB (if found student by full name)
         $this->loadModel('Students');
         $this->_max_id();
         //$students_ldb = $this->Students->find();
@@ -872,6 +875,7 @@ die();
          $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
+            // clean-up names - LDB has cleaned values!
             if ($student_of_asu_mkr['F1']<>5){ //ukrainians
                 $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
                 $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
@@ -965,5 +969,21 @@ var_dump("found - MULTIPLE=".count($found_pos));
         $str = str_replace("\"","",$str);
         
         return $str;
+    }
+    
+    /*
+     * clean-up LDB name`s strings
+     */
+    private function _LDB_names_cleanup(){
+        $this->loadModel('Students');
+        $this->_max_id();
+        $Students_ldb = $this->Students->find('all');
+        foreach ($Students_ldb as $Student_ldb) {
+            $Student_ldb->last_name = trim($Student_ldb->last_name);
+            $Student_ldb->first_name = trim($Student_ldb->first_name);
+            $Student_ldb->first_name = str_replace("  ", " ", $Student_ldb->first_name);
+            $this->Students->save($Student_ldb);
+        }
+        $this->message[]['message'] = "The Student`s names has been updated and saved";
     }
 }
