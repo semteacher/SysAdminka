@@ -22,6 +22,8 @@ use Google_Service_Oauth2;
 use Cake\Network\Email\Email;
 use CsvComponent;
 
+use Cake\Datasource\ConnectionManager;
+
 
 /**
  * Students Controller
@@ -282,9 +284,9 @@ class SyncController extends AppController
             }
             if ($this->request->data(['all_students'])==on){
                  $this->_get_students();
-                 //$this->_get_students_asu_mkr();
                  $this->_sync_C_with_LDB_users();
             }
+            
             if ($this->request->data(['all_students_asumkr'])==on){
                  $this->_get_students_asu_mkr();
                  $this->_sync_ASU_with_LDB_users();
@@ -292,10 +294,14 @@ class SyncController extends AppController
             if ($this->request->data(['ldb_names_cleanup'])==on){
                  $this->_LDB_names_cleanup();
             }
+            if ($this->request->data(['init_all_affiliation_asumkr'])==on){
+                 $this->_initial_update_ldb_affiliation_ids();
+            }            
             if ($this->request->data(['init_all_students_asumkr'])==on){
                  $this->_get_students_asu_mkr();
                  $this->_initial_update_ldb_students_ids();
             }
+            
             if ($this->request->data['photo']==on){
                 $this->_get_students();
                 $this->_get_students_asu_mkr();
@@ -853,12 +859,19 @@ die();
     }
     
     private function _initial_update_ldb_affiliation_ids() {
+        //$this->loadModel('Students');
+        $conn = ConnectionManager::get('default');
         // TODO: Update faculties id's. Execute once - no more necessary
-        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`);";
+        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`)";
+        $faculty_results = $conn->execute($updatefaculty_sql);
+//var_dump($faculty_results);
         // TODO: update specialities id's. Execute once - no more necessary
         $updatespeciality_sql = "UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
             `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);";
+        $speciality_results = $conn->execute($updatespeciality_sql);
+//var_dump($speciality_results);        
+        $this->message[]['message']='Faculties and specialities have been updated for students';
     }
     
     private function _initial_update_ldb_students_ids() {
