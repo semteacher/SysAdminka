@@ -871,7 +871,7 @@ die();
             `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);";
         $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($speciality_results);        
-        $this->message[]['message']='Faculties and specialities have been updated for students';
+        $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
     }
     
     private function _initial_update_ldb_students_ids() {
@@ -884,7 +884,9 @@ die();
         $multipleinstances = 0;
         
          $notfound_pos = array();
+         $notfound_pos2 = array();
          $found_multiple = array();
+         $found_multiple2 = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
             // clean-up names - LDB has cleaned values!
@@ -901,8 +903,9 @@ die();
             $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
             
             $found_pos=array();
+            $found_pos2=array();
             
-var_dump($student_of_asu_mkr['ST1'].": ".$asu_mkr_search_fname." ".$asu_mkr_lname);
+//var_dump($student_of_asu_mkr['ST1'].": ".$asu_mkr_search_fname." ".$asu_mkr_lname);
 
             // Recommended update LDB first - to remove duplication of spaces and trailing spaces....
             $students_ldb = $this->Students->find('all')
@@ -912,26 +915,39 @@ var_dump($student_of_asu_mkr['ST1'].": ".$asu_mkr_search_fname." ".$asu_mkr_lnam
             if (isset($students_ldb)){
                 foreach($students_ldb as $student_ldb){
                     $found_pos[$student_ldb->id] = $student_ldb->student_id;
+                    $found_pos2[] = $student_ldb;
                 }
                 if (count($found_pos)==0) {
                     $notfound++;
-                    $notfound_pos[$student_of_asu_mkr['ST1']] = $asu_mkr_search_fname."-".$asu_mkr_lname;
-var_dump("not found");
+                    $notfound_pos[$student_of_asu_mkr['ST1']] = $asu_mkr_search_fname." ".$asu_mkr_lname;
+                    $notfound_pos2[] = $student_of_asu_mkr;
+//var_dump("not found");
                 }elseif(count($found_pos)==1){
-//var_dump("found - single - direct update!");
                     $singleinstance++;
                     $found_keys = array_keys($found_pos);
-                    $asu_mkr_update_sql = "UPDATE ST SET ST.ST149=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$found_keys[0].";";
-var_dump("found - single: ".$asu_mkr_update_sql);                    
+                    //$asu_mkr_update_sql = "UPDATE ST SET ST.ST149=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                    // TODO: problem with st149 (int not enought) and sql dialect (1 not support bigint)
+                    $asu_mkr_update_sql = "UPDATE ST SET ST.ST200='".$found_pos[$found_keys[0]]."' WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+//var_dump("found - single: ".$asu_mkr_update_sql);                    
+                    $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+//var_dump($results);
                 }else{
-var_dump("found - MULTIPLE=".count($found_pos));
+//var_dump("found - MULTIPLE=".count($found_pos));
                     $multipleinstances++;
                     array_merge($found_multiple,$found_pos); //TODO: possible errors on same keys
+                    $found_multiple2[]= $found_pos2;
                 }
             }
         }
-var_dump($notfound_pos);        
-        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances;
+//var_dump($notfound_pos);
+        $Csv = new CsvComponent($this->options_csv);
+
+        //$data =json_decode(json_encode($data), true);
+        //TODO: 7,7Kb file with 0 content???
+        $Csv->exportCsv(ROOT.DS."webroot".DS."files/notfound.csv", $notfound_pos2);
+        $Csv->exportCsv(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple2);
+//var_dump($notfound_pos2); 
+        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances;          
     }
     
     /*
