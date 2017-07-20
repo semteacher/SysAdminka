@@ -865,7 +865,6 @@ die();
         // Get CongingentID from LDB and insert into ASU MKR DB (if found student by full name)
         $this->loadModel('Students');
         $this->_max_id();
-        //$students_ldb = $this->Students->find();
 
         $notfound = 0;
         $singleinstance = 0;
@@ -892,7 +891,7 @@ die();
             
 var_dump($student_of_asu_mkr['ST1'].": ".$asu_mkr_search_fname." ".$asu_mkr_lname);
 
-            //TODO: need update LDB first - to remove duplication of spaces and trailing spaces....
+            // Recommended update LDB first - to remove duplication of spaces and trailing spaces....
             $students_ldb = $this->Students->find('all')
                 ->where(['first_name' => $asu_mkr_search_fname])
                 ->where(['last_name' => $asu_mkr_lname]);
@@ -920,38 +919,6 @@ var_dump("found - MULTIPLE=".count($found_pos));
         }
 var_dump($notfound_pos);        
         $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances;
-        
-/*         foreach ($students_ldb as $student){
-var_dump($student->first_name." ".$student->last_name." ContID=".$student->student_id);
-            if($student->status_id==1||$student->status_id==10||$student->status_id==11){//students + archive + 2facilities study
-                $tmp_fname = explode(" ", $student->first_name);
-                $search_fname = $tmp_fname[0];
-                $search_mname = $tmp_fname[1];
-                $search_lname = $student->last_name;
-                $found_pos=array();
-                foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
-                    $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
-                    $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
-                    $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
-                    if ($asu_mkr_fname == $search_fname && $asu_mkr_lname == $search_lname && $asu_mkr_mname == $search_mname){
-                        $found_pos[$asu_arr_row]=$student_of_asu_mkr['ST1'];
-                        continue;
-                    }
-                }
-//var_dump($found_pos);                
-                if (count($found_pos)==0) {
-var_dump("not found");
-                    $notfound++;
-                }elseif(count($found_pos)==1){
-var_dump("found - single - direct update!");
-                    $singleinstance++;
-                }else{
-var_dump("found - MULTIPLE=".count($found_pos));
-                    $multipleinstances++;
-                }
-            }
-        }
-        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances; */
     }
     
     /*
