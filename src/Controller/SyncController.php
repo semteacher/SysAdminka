@@ -884,9 +884,7 @@ die();
         $multipleinstances = 0;
         
          $notfound_pos = array();
-         $notfound_pos2 = array();
          $found_multiple = array();
-         $found_multiple2 = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
             // clean-up names - LDB has cleaned values!
@@ -904,8 +902,6 @@ die();
             
             $found_pos=array();
             $found_pos2=array();
-            
-//var_dump($student_of_asu_mkr['ST1'].": ".$asu_mkr_search_fname." ".$asu_mkr_lname);
 
             // Recommended update LDB first - to remove duplication of spaces and trailing spaces....
             $students_ldb = $this->Students->find('all')
@@ -915,38 +911,33 @@ die();
             if (isset($students_ldb)){
                 foreach($students_ldb as $student_ldb){
                     $found_pos[$student_ldb->id] = $student_ldb->student_id;
-                    $found_pos2[] = $student_ldb;
+                    $found_pos2[] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name);
                 }
-                if (count($found_pos)==0) {
+                
+                if (count($found_pos)==0) { // NOT FOUND!
                     $notfound++;
-                    $notfound_pos[$student_of_asu_mkr['ST1']] = $asu_mkr_search_fname." ".$asu_mkr_lname;
-                    $notfound_pos2[] = $student_of_asu_mkr;
-//var_dump("not found");
-                }elseif(count($found_pos)==1){
+                    $notfound_pos[] = $student_of_asu_mkr;
+                } elseif(count($found_pos)==1) { // found - SINGLE OCCYURENCE - OK!
                     $singleinstance++;
                     $found_keys = array_keys($found_pos);
                     //$asu_mkr_update_sql = "UPDATE ST SET ST.ST149=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                     // TODO: problem with st149 (int not enought) and sql dialect (1 not support bigint)
                     $asu_mkr_update_sql = "UPDATE ST SET ST.ST200='".$found_pos[$found_keys[0]]."' WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
-//var_dump("found - single: ".$asu_mkr_update_sql);                    
+                    //UPDATE ASU MKR DATABASE:
                     $results = $this->asu_mkr->sets($asu_mkr_update_sql);
-//var_dump($results);
-                }else{
-//var_dump("found - MULTIPLE=".count($found_pos));
+                } else { // found - MULTIPLE OCCYURENCES
                     $multipleinstances++;
-                    array_merge($found_multiple,$found_pos); //TODO: possible errors on same keys
-                    $found_multiple2[]= $found_pos2;
+                    $found_multiple = array_merge($found_multiple,$found_pos2);
                 }
             }
         }
-//var_dump($notfound_pos);
-        $Csv = new CsvComponent($this->options_csv);
 
-        //$data =json_decode(json_encode($data), true);
+        $Csv = new CsvComponent($this->options_csv);
         //TODO: 7,7Kb file with 0 content???
-        $Csv->exportCsv(ROOT.DS."webroot".DS."files/notfound.csv", $notfound_pos2);
-        $Csv->exportCsv(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple2);
-//var_dump($notfound_pos2); 
+        $Csv->export_simple(ROOT.DS."webroot".DS."files/notfound.csv", $notfound_pos);
+        $Csv->export_simple(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple);
+//var_dump($found_multiple);
+//var_dump($notfound_pos);
         $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances;          
     }
     
