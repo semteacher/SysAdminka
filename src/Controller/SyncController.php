@@ -760,7 +760,7 @@ where
             // Generate new username
             $tmpname = explode(" ", $name['fname']);
             $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
-var_dump($name);                    
+//var_dump($name);                    
             // search Local Database for an existing user:
             if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
                 //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -816,10 +816,10 @@ var_dump($name);
                     //}
                     
                     if($rename>0){
-var_dump("RENAME-strart=".$data);
+//var_dump("RENAME-strart=".$data);
                             if ($this->Students->save($data)) {
                                 $this->options['rename_student']++;
-var_dump("RENAME-ok! ".$this->options['rename_student']);                                
+//var_dump("RENAME-ok! ".$this->options['rename_student']);                                
                                 $this->status=true;
 //                                $this->message[]['message']='Editing students: '.$this->options['rename_student'];
                             }
@@ -849,7 +849,7 @@ var_dump("RENAME-ok! ".$this->options['rename_student']);
                         $data['status_id'] = 3;
                         $this->options['clone_login_in students']++;
                     }
-var_dump("NEW-strart=".$data);
+//var_dump("NEW-strart=".$data);
                     if ($this->Students->save($data)) {
                         $new_student_for_email++;
                         $this->options['new_student']++;
