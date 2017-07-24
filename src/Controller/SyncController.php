@@ -324,7 +324,7 @@ class SyncController extends AppController
                 $data['statistics']=json_encode($this->options);
                 $data['date']=mktime();
                 if ($this->Synchronized->save($data)) {
-                    $this->message[]['message']='Sync is Ok. DB write status Ok.';
+                    $this->message[]['message']='Sync is Ok. DB write status Ok. New students: '.options['new_student'].', renamed students:'.options['rename_student'];
                 }
             }
             $this->Flash->error_form($this->message);
@@ -653,7 +653,7 @@ select
     st.st75, 
     st.st76, 
     st.st144,
-    st.st149,
+    st.st108,
     gr.gr3,
     std.std7,
     std.std11,
@@ -727,18 +727,27 @@ where
         $this->loadModel('Students');
         $this->_max_id();
         //debug only
-        foreach($this->students_mkr as $student_of_asu_mkr){
-var_dump($student_of_asu_mkr['ST2']." ".$student_of_asu_mkr['ST3']." ".$student_of_asu_mkr['ST4']);
-        }
-die();
+//        $contyes = 0;
+//        $contno = 0;
+//        foreach($this->students_mkr as $student_of_asu_mkr){
+//            if ($student_of_asu_mkr['ST108']<>''){
+//                $contyes++;
+//var_dump($student_of_asu_mkr['ST108']."-".$student_of_asu_mkr['ST2']." ".$student_of_asu_mkr['ST3']." ".$student_of_asu_mkr['ST4']);
+//            } else {
+//                $contno++;
+//var_dump($student_of_asu_mkr['ST1']."-".$student_of_asu_mkr['ST2']." ".$student_of_asu_mkr['ST3']." ".$student_of_asu_mkr['ST4']."-".$student_of_asu_mkr['ST108']);            
+//            }
+//        }
+//var_dump('contyes='.$contyes.' contno='.$contno);
+//die();
         
         foreach($this->students_mkr as $student_of_asu_mkr){
             
             // search Local Database for an existing user:
-            if ($student_of_asu_mkr['ST149']){      // get existing user by Contingent ID
-                //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST149!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
+                //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 $student_ldb = $this->Students->find()
-                    ->where(['student_id' => $student_of_asu_mkr['ST149']])
+                    ->where(['student_id' => $student_of_asu_mkr['ST108']])
                     ->first();
             } else {                               // get existing user by ASU MKR ID
                 $student_ldb = $this->Students->find()
@@ -767,7 +776,7 @@ die();
                         $name['fname'] = $this->_name_cleanup($student_of_asu_mkr['ST3'])." ".$this->_name_cleanup($student_of_asu_mkr['ST4']);
                     }
                     $tmpname = explode(" ", $name['fname']);
-                    $name['uname'] .= _create_username($tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3].$tmpname[2][0].$tmpname[2][1].$tmpname[2][2].$tmpname[2][3]); //start username as abbreviate in English
+                    $name['uname'] .= $this->_create_username($tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3].$tmpname[2][0].$tmpname[2][1].$tmpname[2][2].$tmpname[2][3]); //start username as abbreviate in English
                     
                     //update existing student's record
                     $data = $this->Students->get($student_ldb->id);
@@ -830,8 +839,9 @@ die();
                     $data['user_name'] = $name['uname'];
                     $data['grade_level'] = $student_of_asu_mkr['ST71'];
                     $data['password'] = $this->_generate_pass();
+                    if ($student_of_asu_mkr['ST108']<>'') { $data['student_id'] = $student_of_asu_mkr['ST108']; }
                     $student_of_asu_mkr['std11']==0 ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
-
+                    
                     $student_login_clone = $this->Students->find()
                         ->where(['user_name' => $name['uname']])
                         ->first();
@@ -854,7 +864,8 @@ die();
             $this->message[]['message']="Sorry, there are no new records in ASU MKR database";
         }
         if (count($new_student_for_email)>0){
-            $this->send_email($new_student_for_email,"New students in SysAdmin!");
+            //TODO: temporarily disabled!!!
+            //$this->send_email($new_student_for_email,"New students in SysAdmin!");
         }
     }
     
@@ -920,9 +931,9 @@ die();
                 } elseif(count($found_pos)==1) { // found - SINGLE OCCYURENCE - OK!
                     $singleinstance++;
                     $found_keys = array_keys($found_pos);
-                    //$asu_mkr_update_sql = "UPDATE ST SET ST.ST149=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                    $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                     // TODO: problem with st149 (int not enought) and sql dialect (1 not support bigint)
-                    $asu_mkr_update_sql = "UPDATE ST SET ST.ST200='".$found_pos[$found_keys[0]]."' WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                    //$asu_mkr_update_sql = "UPDATE ST SET ST.ST200='".$found_pos[$found_keys[0]]."' WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                     //UPDATE ASU MKR DATABASE:
                     $results = $this->asu_mkr->sets($asu_mkr_update_sql);
                 } else { // found - MULTIPLE OCCYURENCES
@@ -933,7 +944,6 @@ die();
         }
 
         $Csv = new CsvComponent($this->options_csv);
-        //TODO: 7,7Kb file with 0 content???
         $Csv->export_simple(ROOT.DS."webroot".DS."files/notfound.csv", $notfound_pos);
         $Csv->export_simple(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple);
 //var_dump($found_multiple);
