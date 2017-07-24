@@ -743,26 +743,24 @@ where
 //die();
         
         foreach($this->students_mkr as $student_of_asu_mkr){
-
-                    //Prepare and clean-up names on Ukrainian or English
-                    if ($student_of_asu_mkr['ST74']!=null) {
-                        $name['lname'] = $this->_name_cleanup($student_of_asu_mkr['ST74']);
-                    } else {
-                        $name['lname'] = $this->_name_cleanup($student_of_asu_mkr['ST2']);
-                    }
-                    $name['uname'] = $this->_create_username($name['lname'])."_"; //start username as lastname in English
-                    if ($student_of_asu_mkr['ST75']!=null) {
-                        $name['fname'] = $this->_name_cleanup($student_of_asu_mkr['ST75']);
-                        $name['uname'] = $name['uname'].$name['fname'][0].$name['fname'][1].$name['fname'][2].$name['fname'][3];
-                        if ($student_of_asu_mkr['ST76']!=null) {
-                            $name['fname'] = $name['fname']." ".$this->_name_cleanup($student_of_asu_mkr['ST76']);
-                        }
-                    } else {
-                        $name['fname'] = $this->_name_cleanup($student_of_asu_mkr['ST3'])." ".$this->_name_cleanup($student_of_asu_mkr['ST4']);
-                    }
-                    $tmpname = explode(" ", $name['fname']);
-                    $name['uname'] .= $this->_create_username($tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3].$tmpname[2][0].$tmpname[2][1].$tmpname[2][2].$tmpname[2][3]); //start username as abbreviate in English
-                    
+            
+            //Prepare and clean-up names on Ukrainian or English
+            if ($student_of_asu_mkr['ST32']==804){ //ukrainians
+                $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
+                $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
+                $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
+            } else {                            //foreign
+                $asu_mkr_fname = ($student_of_asu_mkr['ST75']!=null?$this->_name_cleanup($student_of_asu_mkr['ST75']):$this->_name_cleanup($student_of_asu_mkr['ST3']));
+                $asu_mkr_mname = ($student_of_asu_mkr['ST76']!=null?$this->_name_cleanup($student_of_asu_mkr['ST76']):$this->_name_cleanup($student_of_asu_mkr['ST4']));
+                $asu_mkr_lname = ($student_of_asu_mkr['ST74']!=null?$this->_name_cleanup($student_of_asu_mkr['ST74']):$this->_name_cleanup($student_of_asu_mkr['ST2']));
+            }
+            
+            $name['fname'] = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
+            $name['lname'] = $asu_mkr_lname;
+            // Generate new username
+            $tmpname = explode(" ", $name['fname']);
+            $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
+var_dump($name);                    
             // search Local Database for an existing user:
             if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
                 //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -821,6 +819,7 @@ where
 var_dump("RENAME-strart=".$data);
                             if ($this->Students->save($data)) {
                                 $this->options['rename_student']++;
+var_dump("RENAME-ok! ".$this->options['rename_student']);                                
                                 $this->status=true;
 //                                $this->message[]['message']='Editing students: '.$this->options['rename_student'];
                             }
@@ -837,9 +836,9 @@ var_dump("RENAME-strart=".$data);
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
                     $data['user_name'] = $name['uname'];
-                    $data['grade_level'] = $student_of_asu_mkr['ST71'];
+                    $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
                     $data['password'] = $this->_generate_pass();
-                    if ($student_of_asu_mkr['ST108']<>'') { $data['student_id'] = $student_of_asu_mkr['ST108']; }
+                    $data['student_id'] = $student_of_asu_mkr['ST108'];
                     $student_of_asu_mkr['std11']==0 ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
                     
                     $student_login_clone = $this->Students->find()
