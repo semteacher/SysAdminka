@@ -649,6 +649,7 @@ select
     st.st2,
     st.st3,
     st.st4,
+    st.st32,
     st.st74, 
     st.st75, 
     st.st76, 
@@ -742,22 +743,6 @@ where
 //die();
         
         foreach($this->students_mkr as $student_of_asu_mkr){
-            
-            // search Local Database for an existing user:
-            if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
-                //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                $student_ldb = $this->Students->find()
-                    ->where(['student_id' => $student_of_asu_mkr['ST108']])
-                    ->first();
-            } else {                               // get existing user by ASU MKR ID
-                $student_ldb = $this->Students->find()
-                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']])
-                    ->first();            
-            }
-            
-            if ($student_of_asu_mkr['std11']==0){ //student!
-                if (isset($student_ldb)){
-                    $rename=0;
 
                     //Prepare and clean-up names on Ukrainian or English
                     if ($student_of_asu_mkr['ST74']!=null) {
@@ -778,6 +763,21 @@ where
                     $tmpname = explode(" ", $name['fname']);
                     $name['uname'] .= $this->_create_username($tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3].$tmpname[2][0].$tmpname[2][1].$tmpname[2][2].$tmpname[2][3]); //start username as abbreviate in English
                     
+            // search Local Database for an existing user:
+            if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
+                //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                $student_ldb = $this->Students->find()
+                    ->where(['student_id' => $student_of_asu_mkr['ST108']])
+                    ->first();
+            } else {                               // get existing user by ASU MKR ID
+                $student_ldb = $this->Students->find()
+                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']])
+                    ->first();            
+            }
+            
+            if ($student_of_asu_mkr['std11']==0){ //student!
+                if (isset($student_ldb)){
+                    $rename=0;
                     //update existing student's record
                     $data = $this->Students->get($student_ldb->id);
                     if ($student_of_asu_mkr['F1']!=$student_ldb->f_id){
@@ -818,7 +818,7 @@ where
                     //}
                     
                     if($rename>0){
-
+var_dump("RENAME-strart=".$data);
                             if ($this->Students->save($data)) {
                                 $this->options['rename_student']++;
                                 $this->status=true;
@@ -850,7 +850,7 @@ where
                         $data['status_id'] = 3;
                         $this->options['clone_login_in students']++;
                     }
-
+var_dump("NEW-strart=".$data);
                     if ($this->Students->save($data)) {
                         $new_student_for_email++;
                         $this->options['new_student']++;
@@ -899,7 +899,8 @@ where
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
             // clean-up names - LDB has cleaned values!
-            if ($student_of_asu_mkr['F1']<>5){ //ukrainians
+            //if ($student_of_asu_mkr['F1']<>5){ //ukrainians
+            if ($student_of_asu_mkr['ST32']==804){ //ukrainians
                 $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
                 $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
                 $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
