@@ -83,7 +83,7 @@
                                  </label>
                                  </fieldset>
                              </div>
-                             </div>
+                        </div>
                 </div>
                 <div class="row">
                         <div class="col-sm-6 col-md-3">
@@ -124,6 +124,27 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="col-sm-6 col-md-3">
+                             <div class="thumbnail sync">
+                                 <fieldset >
+                                 <label>
+                                     <?= $this->Html->image("SyncImage.png", [
+                                         "alt" => "Sync",
+                                         "class"=>"col-xs-12 hidden-xs"
+                                     ]);?>
+                                     <div class="caption ">
+                                         <h3 class="">Get photos from ASU MKR </h3>
+                                         <p class="alert alert-danger">Time of synchronization can be more than 2 minute</p>
+                                         <div class="checkbox">
+                                             <label>
+                                                 <input type="checkbox" name="photo_asumkr" style="width:50px;height: 40px;">
+                                             </label>
+                                         </div>
+                                     </div>
+                                 </label>
+                                 </fieldset>
+                             </div>
+                        </div>                        
                 </div>
                 <div class="row">
                     <div class="col-sm-6 col-md-3">
@@ -169,6 +190,11 @@
                         </div>
                     </div>
              </div>
+             <div class="row">
+    <div class="form-group">
+            <button type="submit" class="btn btn-success">Start</button>
+    </div>             
+             <div>
              <div class="row">
                         <div class="col-sm-6 col-md-3">
                             <div class="thumbnail sync">
@@ -232,9 +258,7 @@
 
         </div>
     </fieldset>
-    <div class="form-group">
-            <button type="submit" class="btn btn-success">Start</button>
-    </div>
+
     <?= $this->Form->end() ?>
 
 </div>
