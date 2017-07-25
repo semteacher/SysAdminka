@@ -287,6 +287,7 @@ class SyncController extends AppController
                  $this->_sync_C_with_LDB_users();
             }
             
+            //----------ASU MKR actions begin------------------
             if ($this->request->data(['all_students_asumkr'])==on){
                  $this->_get_students_asu_mkr();
                  $this->_sync_ASU_with_LDB_users();
@@ -301,10 +302,14 @@ class SyncController extends AppController
                  $this->_get_students_asu_mkr();
                  $this->_initial_update_ldb_students_ids();
             }
+            if ($this->request->data['photo_asumkr']==on){
+                $this->_get_students_asu_mkr();
+                $this->_sync_ASU_with_LDB_photo();
+            }
+            //----------ASU MKR actions end------------------
             
             if ($this->request->data['photo']==on){
                 $this->_get_students();
-                $this->_get_students_asu_mkr();
                 $this->_sync_C_with_LDB_photo();
             }
             if ($this->request->data['google_photo']==on){
@@ -778,6 +783,10 @@ where
                     $rename=0;
                     //update existing student's record
                     $data = $this->Students->get($student_ldb->id);
+                    if ($student_of_asu_mkr['ST1']!=$student_ldb->asumkr_id){ //should be really executed first time only
+                        $rename++;
+                        $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                    }
                     if ($student_of_asu_mkr['F1']!=$student_ldb->f_id){
                         $rename++;
                         $data['f_id']=$student_of_asu_mkr['F1'];
@@ -867,6 +876,28 @@ where
             //$this->send_email($new_student_for_email,"New students in SysAdmin!");
         }
     }
+
+    private function _sync_ASU_with_LDB_photo(){
+        $this->loadModel('Students');
+        foreach($this->students_mkr as $student_of_asu_mkr){
+            $student_ldb = $this->Students->find()
+                ->where(['asumkr_id ' => $student_of_asu_mkr['ST1']],['status_id'=>1])
+                ->first();
+            if (isset($student_ldb)){
+                //get photo from BDD
+                $this->students_mkr_photo = $this->asu_mkr->gets_bdd("SELECT foto3 FROM foto WHERE ((foto1=".$student_of_asu_mkr['ST1'].")AND(foto2=1));");
+                //put photo ino file
+                $img = ibase_blob_get(ibase_blob_open($students_mkr_photo[0]['PHOTO']), ibase_blob_info($students_mkr_photo[0]['PHOTO'])[0]);
+var_dump($students_mkr_photo[0]['PHOTO']);
+var_dump($img);
+                //TODO: need debug first
+                //file_put_contents('photo/'.$student_ldb['user_name'].'.jpg', $img);
+                ibase_blob_close($students_mkr_photo[0]['PHOTO']);
+            }
+        }
+        $this->message[]['message']='Sync photos ASU MKR-> LDB was successfully';
+
+    }    
     
     private function _initial_update_ldb_affiliation_ids() {
         //$this->loadModel('Students');
