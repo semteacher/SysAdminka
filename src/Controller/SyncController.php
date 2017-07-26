@@ -306,6 +306,10 @@ class SyncController extends AppController
                 $this->_get_students_asu_mkr();
                 $this->_sync_ASU_with_LDB_photo();
             }
+            if ($this->request->data['init_asumkr_portal_users']==on){
+                $this->_initial_update_asumkr_portal_userdata();
+            }
+            
             //----------ASU MKR actions end------------------
             
             if ($this->request->data['photo']==on){
@@ -980,6 +984,12 @@ var_dump($img);
 //var_dump($found_multiple);
 //var_dump($notfound_pos);
         $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances;          
+    }
+    
+    private function _initial_update_asumkr_portal_userdata (){
+        $this->loadModel('Students');
+
+        
     }
     
     /*
