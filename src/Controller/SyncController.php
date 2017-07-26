@@ -681,6 +681,13 @@ where
             ");
     }
     
+    private function _get_asu_mkr_portal_user($username, $usertype=0){
+        unset($this->asu_mkr_portal_users);
+        $this->asu_mkr_portal_users = $this->asu_mkr->gets("
+            SELECT u1 FROM users WHERE u2='".$username."' AND u5=".$usertype."
+        ");
+    }
+    
     /*
      * Sync ASU MKR specialities with Local DataBase
      * SP_ID, PNSP_ID
@@ -988,8 +995,48 @@ var_dump($img);
     
     private function _initial_update_asumkr_portal_userdata (){
         $this->loadModel('Students');
-
-        
+        //$this->_get_asu_mkr_portal_users();
+        $newportaluser = 0;
+        $dbwriteerrors = 0;
+        $missed = 0;
+        $students_ldb = $this->Students->find('all');
+        foreach($students_ldb as $student_ldb){
+            //check if user has been already registered on portal
+            $this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);           
+            if (is_null($this->asu_mkr_portal_users)&&!is_null($student_ldb->asumkr_id)){
+//var_dump($student_ldb);
+                $uidmaxarr = $this->_asu_portal_get_maxuserid();
+                if (is_array($uidmaxarr)){
+                    $new_id = $uidmaxarr[1]['MAX']+1;
+//var_dump($new_id);                
+                    $salt = $this->_asu_portal_generateSalt();
+                    $pass = $this->_asu_portal_setPassword($student_ldb->password, $salt);
+                    // SQL to create a new portal user 
+                    $asu_mkr_insert_sql = "INSERT INTO users (u1,u2,u3,u4,u5,u6,u7,u8,u9) VALUES(
+                                            ".$new_id.",
+                                            '".$student_ldb->user_name."',
+                                            '".$pass."',
+                                            '".$student_ldb->user_name."@tdmu.edu.ua',
+                                            0,
+                                            ".$student_ldb->asumkr_id.",
+                                            0,
+                                            0,
+                                            '".$salt."'
+                                            );";
+//print_r($asu_mkr_insert_sql);
+                    $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
+                    if ($results){
+                        $newportaluser++;
+                    } else {
+                        $dbwriteerrors++;
+                    }
+                }
+            } else { //TODO: debug only
+                //var_dump($student_ldb->student_id);
+                $missed++;
+            }
+        }
+        $this->message[]['message']= $newportaluser.' new portal users has been created! '.$dbwriteerrors.' DB write errors. '.$missed.' records missed';
     }
     
     /*
@@ -1023,5 +1070,23 @@ var_dump($img);
             $this->Students->save($Student_ldb);
         }
         $this->message[]['message'] = "The Student`s names has been updated and saved";
+    }
+    
+    private function _asu_portal_setPassword($password,$salt){
+		$encrypted_password = crypt($password,$salt);
+        return $encrypted_password;
+		//$this->sendChangePasswordMail($password);
+	}
+    
+    private function _asu_portal_generateSalt(){
+		$salt = openssl_random_pseudo_bytes(12);
+		$hex   = bin2hex($salt);
+		$salt = '$1$' .$hex /*strtr($salt, array('_' => '.', '~' => '/'))*/;
+
+		return $salt;  //$this->u9 in asu
+	}
+    
+    private function _asu_portal_get_maxuserid(){
+        return $this->asu_mkr->gets("select max(u1) from users;");
     }
 }
