@@ -33,6 +33,7 @@ class ViewsController extends AppController
     }
 
     public function moodle(){
+        $this->set('title','Export for Moodle');
         if ($this->request->is('post')) {
             $Csv = new CsvComponent($this->options);
             $data = $this->Students->find()->where([
@@ -40,6 +41,27 @@ class ViewsController extends AppController
                         ' AND special_id = '.$this->request->data['special_id'].
                         ' AND grade_level = '.$this->request->data['grade_level'].
                         ' AND status_id = '.$this->request->data['status_id']]);
+
+            $data= $data->select([
+                'username'=>'user_name',
+                'password'=>'password',
+                'firstname'=>'first_name',
+                'lastname'=>'last_name',
+                'email' => $data->func()->concat([
+                    'user_name' => 'literal',
+                    '@',
+                    'tdmu.edu.ua'
+                ]),
+                'course1' => $data->func()->concat(['']),
+                'group1' => 'groupnum',
+                'cohort1' => $data->func()->concat([
+                    'grade_level' => 'literal',
+                    ' Semester'
+                ]),
+                'idnumber' => 'student_id',
+                'auth' => $data->func()->concat(['googleoauth2'])
+
+            ]);
             $data =json_decode(json_encode($data), true);
             if (count($data)>0){
                 $Csv->exportCsv(ROOT.DS."webroot".DS."files/".$_SESSION['Auth']['User']['id'].".csv", array($data), $this->options);
@@ -47,6 +69,7 @@ class ViewsController extends AppController
             }else{
                 $this->Flash->error(__('No users'));
             }
+
         }
     }
 
@@ -66,6 +89,7 @@ class ViewsController extends AppController
                 $this->Flash->error(__('No users'));
             }
         }
+        $this->set('title','Export for Deanery');
         $this->render('moodle');
     }
 
