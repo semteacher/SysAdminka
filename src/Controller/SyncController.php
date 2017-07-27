@@ -904,7 +904,7 @@ var_dump($img);
         //$this->loadModel('Students');
         $conn = ConnectionManager::get('default');
         // TODO: Update faculties id's. Execute once - no more necessary
-        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`)";
+        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`);";
         $faculty_results = $conn->execute($updatefaculty_sql);
 //var_dump($faculty_results);
         // TODO: update specialities id's. Execute once - no more necessary
@@ -1027,13 +1027,24 @@ var_dump($img);
         //$faculty_results = $conn->query($updatefaculty_structure_sql);
         //$conn->commit();
 
-        $updatespecials_structure_sql = "ALTER TABLE specials COLLATE utf8_general_ci;
-                                         ALTER TABLE specials ADD cont_id int AFTER code; 
-                                         ALTER TABLE specials ADD pnsp_id int AFTER cont_id;
-                                         ALTER TABLE specials ADD sp_id int AFTER pnsp_id; 
-                                         UPDATE specials SET cont_id = special_id; ";
+        $updatespecials_structure_sql = "ALTER TABLE `specials` COLLATE utf8_general_ci; 
+                                         ALTER TABLE `specials` ADD cont_id int AFTER code; 
+                                         ALTER TABLE `specials` ADD pnsp_id int AFTER cont_id; 
+                                         ALTER TABLE `specials` ADD sp_id int AFTER pnsp_id; 
+                                         UPDATE `specials` SET cont_id = special_id; ";
+        
+        $updatestyudent_structure_sql = "ALTER TABLE `students` ADD c_stud_id text AFTER send_photo_google; 
+                                         ALTER TABLE `students` ADD c_school_id int(3) AFTER c_stud_id; 
+                                         ALTER TABLE `students` ADD c_sprec_id int(5) AFTER c_school_id; 
+                                         ALTER TABLE `students` ADD f_id int(3) AFTER c_sprec_id; 
+                                         ALTER TABLE `students` ADD pnsp_id int AFTER f_id; 
+                                         ALTER TABLE `students` ADD sp_id int AFTER pnsp_id; 
+                                         ALTER TABLE `students` ADD asumkr_id int AFTER sp_id;
+                                         UPDATE `students` SET c_stud_id = student_id; 
+                                         UPDATE `students` SET c_sprec_id = special_id; 
+                                         UPDATE `students` SET c_school_id = school_id; ";
                                          
-        $update_structure_sql =  $updatefaculty_structure_sql.$updatespecials_structure_sql;
+        $update_structure_sql =  $updatefaculty_structure_sql.$updatespecials_structure_sql.$updatestyudent_structure_sql;
         //apply DB structure update
         $conn->begin();
         $results = $conn->execute($update_structure_sql);
