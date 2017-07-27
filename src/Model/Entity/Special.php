@@ -22,9 +22,8 @@ class Special extends Entity
         'sp_id' => true,
     ];
 
-//    protected function _getName()
-//    {
-//        return $this->_properties['name'] . '(' .
-//        $this->_properties['code'].')';
-//    }
+    protected function _getName()
+    {
+        return $this->_properties['name'];
+    }
 }
