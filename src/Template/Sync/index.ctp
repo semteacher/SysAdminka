@@ -3,7 +3,7 @@
     <?= $this->Form->create($student,['id'=>'sync_form']);?>
     <fieldset>
         <legend><?= __('Options sync') ?></legend>
-             <div class="form-group">
+            <div class="form-group">
                 <div class="row">
                         <div class="col-sm-6 col-md-3">
                             <div class="thumbnail sync">
@@ -189,13 +189,20 @@
                             </fieldset>
                         </div>
                     </div>
-             </div>
-             <div class="row">
-    <div class="form-group">
-            <button type="submit" class="btn btn-success">Start</button>
-    </div>             
-             <div>
-             <div class="row">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <button type="submit" class="btn btn-success">Start</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <legend><?= __('Contingent -> ASU MKR Migration options') ?></legend>            
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
                         <div class="col-sm-6 col-md-3">
                             <div class="thumbnail sync">
                                 <label>
@@ -254,9 +261,8 @@
                                 </label>
                             </div>
                         </div>
-             </div>
-
-        </div>
+                </div>
+            </div>
     </fieldset>
 
     <?= $this->Form->end() ?>
