@@ -206,6 +206,46 @@
                         <div class="col-sm-6 col-md-3">
                             <div class="thumbnail sync">
                                 <label>
+
+                                <?= $this->Html->image("SyncArchiv.png", [
+                                    "alt" => "Sync",
+                                    "class"=>"col-xs-12 hidden-xs"
+                                ]);?>
+                                <div class="caption">
+                                    <h3 class="">1: LDB DB structure udgrade</h3>
+                                    <p class="alert alert-danger">Time of processing less than 1 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="init_ldb_dbstructure_upgrade" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+
+                                <?= $this->Html->image("SyncUser.png", [
+                                    "alt" => "Sync",
+                                    "class"=>"col-xs-12 hidden-xs"
+                                ]);?>
+                                <div class="caption">
+                                    <h3 class="">2: LDB Names Clean-up</h3>
+                                    <p class="alert alert-danger">Time of processing less than 2 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="ldb_names_cleanup" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
                                     <?= $this->Html->image("Sync.png", [
                                         "alt" => "Sync",
                                         "class"=>"col-xs-12 hidden-xs "
@@ -241,26 +281,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="col-sm-6 col-md-3">
-                            <div class="thumbnail sync">
-                                <label>
-
-                                <?= $this->Html->image("SyncArchiv.png", [
-                                    "alt" => "Sync",
-                                    "class"=>"col-xs-12 hidden-xs"
-                                ]);?>
-                                <div class="caption">
-                                    <h3 class="">LDB Names Clean-up (spaces removal)</h3>
-                                    <p class="alert alert-danger">Time of processing less than 5 minute</p>
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" name="ldb_names_cleanup" style="width:50px;height: 40px;">
-                                        </label>
-                                    </div>
-                                </div>
-                                </label>
-                            </div>
-                        </div>
+                        
                 </div>
             </div>
     </fieldset>
