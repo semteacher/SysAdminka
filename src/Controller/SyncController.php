@@ -1018,7 +1018,11 @@ var_dump($img);
     
     private function _initial_LDB_dbstructure_upgrade(){
         $conn = ConnectionManager::get('default');
-        $updatefaculty_structure_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`)";
+        $updatefaculty_structure_sql = "ALTER TABLE `schools` COLLATE utf8_general_ci;
+                                        ALTER TABLE `schools` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+                                        ALTER TABLE `schools` ADD cont_id int(3) AFTER name;
+                                        ALTER TABLE `schools` ADD f_id int(3) AFTER cont_id;
+                                        UPDATE `schools` SET cont_id = school_id; ";
         $faculty_results = $conn->execute($updatefaculty_structure_sql);
         if ($faculty_results){
             $this->message[]['message']='LDB faculty (school) table structure updated SUCCESSFULY';
