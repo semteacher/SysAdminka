@@ -52,6 +52,7 @@ class SpecialsTable extends Table
             ->notEmpty('name')
             ->requirePresence('code', 'create')
             ->notEmpty('code')
+            ->allowEmpty('cont_id', 'create')
             ->allowEmpty('pnsp_id', 'create')
             ->allowEmpty('sp_id', 'create');
 
