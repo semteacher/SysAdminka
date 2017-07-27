@@ -903,15 +903,17 @@ var_dump($img);
     private function _initial_update_ldb_affiliation_ids() {
         //$this->loadModel('Students');
         $conn = ConnectionManager::get('default');
-        // TODO: Update faculties id's. Execute once - no more necessary
-        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`);";
+        // Update faculties id's. Execute once - no more necessary
+        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`); 
+        UPDATE `schools` SET `schools`.`school_id` = `schools`.`f_id`;
+        UPDATE `students` SET `students`.`school_id`=`students`.`f_id`; ";
         $faculty_results = $conn->execute($updatefaculty_sql);
 //var_dump($faculty_results);
         // TODO: update specialities id's. Execute once - no more necessary
-        $updatespeciality_sql = "UPDATE `students` SET 
-            `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
-            `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);";
-        $speciality_results = $conn->execute($updatespeciality_sql);
+    //    $updatespeciality_sql = "UPDATE `students` SET 
+    //        `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
+    //        `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);";
+    //    $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($speciality_results);        
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
     }
