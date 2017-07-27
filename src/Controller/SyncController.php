@@ -839,16 +839,22 @@ where
                     //add a new student
                     $data = $this->Students->newEntity();
                     $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
+                    $data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
                     $data['f_id'] = $student_of_asu_mkr['F1'];
                     $data['pnsp_id'] = $student_of_asu_mkr['PNSP_ID'];
                     $data['sp_id'] = $student_of_asu_mkr['SP_ID'];
+                    $data['special_id'] = $student_of_asu_mkr['SP_ID']; //for gsync
                     $data['groupnum'] = $student_of_asu_mkr['GR3'];
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
                     $data['user_name'] = $name['uname'];
                     $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
                     $data['password'] = $this->_generate_pass();
-                    $data['student_id'] = $student_of_asu_mkr['ST108'];
+                    if ($student_of_asu_mkr['ST108']<>''){   //should be newer executed but for compatibility
+                        $data['student_id'] = $student_of_asu_mkr['ST108'];  //for gsync
+                    } else {
+                        $data['student_id'] = $student_of_asu_mkr['ST1'];    //for gsync
+                    }
                     $student_of_asu_mkr['std11']==0 ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
                     
                     $student_login_clone = $this->Students->find()
@@ -912,7 +918,9 @@ var_dump($img);
         // TODO: update specialities id's. Execute once - no more necessary
     //    $updatespeciality_sql = "UPDATE `students` SET 
     //        `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
-    //        `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);";
+    //        `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);
+    //           UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
+    //           UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
     //    $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($speciality_results);        
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
