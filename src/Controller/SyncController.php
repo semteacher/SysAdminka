@@ -271,13 +271,7 @@ class SyncController extends AppController
         if ($this->request->is('post')) {
             if ($this->request->data(['special'])==on){
                 $this->_get_speciality();
-                //$this->_get_speciality_asu_mkr();
-                //$this->_sync_ASU_with_LDB_spec();
                 $this->_sync_C_with_LDB_spec();
-            }
-            if ($this->request->data(['specials_asumkr'])==on){
-                $this->_get_speciality_asu_mkr();
-                $this->_sync_ASU_with_LDB_spec();
             }
             if ($this->request->data['archive']==on){
                 $this->_sync_archive();
@@ -288,13 +282,20 @@ class SyncController extends AppController
             }
             
             //----------ASU MKR actions begin------------------
+            if ($this->request->data(['specials_asumkr'])==on){
+                $this->_get_speciality_asu_mkr();
+                $this->_sync_ASU_with_LDB_spec();
+            }
             if ($this->request->data(['all_students_asumkr'])==on){
                  $this->_get_students_asu_mkr();
                  $this->_sync_ASU_with_LDB_users();
             }
+            if ($this->request->data(['init_ldb_dbstructure_upgrade'])==on){
+                 $this->_initial_LDB_dbstructure_upgrade();
+            }
             if ($this->request->data(['ldb_names_cleanup'])==on){
                  $this->_LDB_names_cleanup();
-            }
+            }            
             if ($this->request->data(['init_all_affiliation_asumkr'])==on){
                  $this->_initial_update_ldb_affiliation_ids();
             }            
@@ -1013,5 +1014,16 @@ var_dump($img);
             $this->Students->save($Student_ldb);
         }
         $this->message[]['message'] = "The Student`s names has been updated and saved";
+    }
+    
+    private function _initial_LDB_dbstructure_upgrade(){
+        $conn = ConnectionManager::get('default');
+        $updatefaculty_structure_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`)";
+        $faculty_results = $conn->execute($updatefaculty_structure_sql);
+        if ($faculty_results){
+            $this->message[]['message']='LDB faculty (school) table structure updated SUCCESSFULY';
+        } else {
+            $this->message[]['message']='FAILED to update LDB faculty (school) table structure!';
+        }
     }
 }
