@@ -1023,11 +1023,25 @@ var_dump($img);
                                         ALTER TABLE `schools` ADD cont_id int(3) AFTER name;
                                         ALTER TABLE `schools` ADD f_id int(3) AFTER cont_id;
                                         UPDATE `schools` SET cont_id = school_id; ";
-        $faculty_results = $conn->execute($updatefaculty_structure_sql);
-        if ($faculty_results){
-            $this->message[]['message']='LDB faculty (school) table structure updated SUCCESSFULY';
+        //$conn->begin();
+        //$faculty_results = $conn->query($updatefaculty_structure_sql);
+        //$conn->commit();
+
+        $updatespecials_structure_sql = "ALTER TABLE specials COLLATE utf8_general_ci;
+                                         ALTER TABLE specials ADD cont_id int AFTER code; 
+                                         ALTER TABLE specials ADD pnsp_id int AFTER cont_id;
+                                         ALTER TABLE specials ADD sp_id int AFTER pnsp_id; 
+                                         UPDATE specials SET cont_id = special_id; ";
+                                         
+        $update_structure_sql =  $updatefaculty_structure_sql.$updatespecials_structure_sql;
+        //apply DB structure update
+        $conn->begin();
+        $results = $conn->execute($update_structure_sql);
+        $conn->commit();
+        if ($results){
+            $this->message[]['message']='LDB tables structure updated SUCCESSFULY';
         } else {
-            $this->message[]['message']='FAILED to update LDB faculty (school) table structure!';
+            $this->message[]['message']='FAILED to update LDB tables structure!';
         }
     }
 }
