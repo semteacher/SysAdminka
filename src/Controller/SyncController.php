@@ -330,7 +330,7 @@ class SyncController extends AppController
                 $data['statistics']=json_encode($this->options);
                 $data['date']=mktime();
                 if ($this->Synchronized->save($data)) {
-                    $this->message[]['message']='Sync is Ok. DB write status Ok. New students: '.options['new_student'].', renamed students:'.options['rename_student'];
+                    $this->message[]['message']='Sync is Ok. DB write status Ok. New students: '.$this->options['new_student'].', renamed students:'.$this->options['rename_student'];
                 }
             }
             $this->Flash->error_form($this->message);
@@ -766,7 +766,7 @@ where
             // Generate new username
             $tmpname = explode(" ", $name['fname']);
             $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
-//var_dump($name);                    
+var_dump($name);                    
             // search Local Database for an existing user:
             if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
                 //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -792,13 +792,13 @@ where
                         $rename++;
                         $data['f_id']=$student_of_asu_mkr['F1'];
                     }
-                    if ($student_of_asu_mkr['PNSP_ID']!=$student_ldb->pnsp_id){
+                    if ($student_of_asu_mkr['PNSP1']!=$student_ldb->pnsp_id){
                         $rename++;
-                        $data['pnsp_id']=$student_of_asu_mkr['PNSP_ID'];
+                        $data['pnsp_id']=$student_of_asu_mkr['PNSP1'];
                     }
-                    if ($student_of_asu_mkr['SP_ID']!=$student_ldb->sp_id){
+                    if ($student_of_asu_mkr['SP1']!=$student_ldb->sp_id){
                         $rename++;
-                        $data['sp_id']=$student_of_asu_mkr['SP_ID'];
+                        $data['sp_id']=$student_of_asu_mkr['SP1'];
                     }
                     if ($student_of_asu_mkr['ST71']!=$student_ldb->grade_level){ //TODO: where is this? ST71 - for NFAU??
                         $rename++;
@@ -841,9 +841,9 @@ where
                     $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
                     $data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
                     $data['f_id'] = $student_of_asu_mkr['F1'];
-                    $data['pnsp_id'] = $student_of_asu_mkr['PNSP_ID'];
-                    $data['sp_id'] = $student_of_asu_mkr['SP_ID'];
-                    $data['special_id'] = $student_of_asu_mkr['SP_ID']; //for gsync
+                    $data['pnsp_id'] = $student_of_asu_mkr['PNSP1'];
+                    $data['sp_id'] = $student_of_asu_mkr['SP1'];
+                    $data['special_id'] = $student_of_asu_mkr['SP1']; //for gsync
                     $data['groupnum'] = $student_of_asu_mkr['GR3'];
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
@@ -865,12 +865,15 @@ where
                         $data['status_id'] = 3;
                         $this->options['clone_login_in students']++;
                     }
-//var_dump("NEW-strart=".$data);
+var_dump("NEW-start=".$data);
                     if ($this->Students->save($data)) {
                         $new_student_for_email++;
                         $this->options['new_student']++;
                         $this->status=true;
+var_dump("NEW-OK=".$data['asumkr_id']);                        
 //                        $this->message[]['message']='New students: '.$this->options['new_student'];
+                    } else {
+var_dump("NEW-failed=".$data['asumkr_id']);
                     }
                 }
             }
@@ -934,6 +937,7 @@ var_dump($img);
         $notfound = 0;
         $singleinstance = 0;
         $multipleinstances = 0;
+        $multipleresolved = 0;
         
          $notfound_pos = array();
          $found_multiple = array();
@@ -964,7 +968,7 @@ var_dump($img);
             if (isset($students_ldb)){
                 foreach($students_ldb as $student_ldb){
                     $found_pos[$student_ldb->id] = $student_ldb->student_id;
-                    $found_pos2[] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name);
+                    $found_pos2[] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name, 'statusID'=>$student_ldb->status_id);
                 }
                 
                 if (count($found_pos)==0) { // NOT FOUND!
@@ -981,6 +985,14 @@ var_dump($img);
                 } else { // found - MULTIPLE OCCYURENCES
                     $multipleinstances++;
                     $found_multiple = array_merge($found_multiple,$found_pos2);
+                    //update ASU MRR DB for only active student's
+                    foreach ($found_pos2 as $student2resolve) {
+                        if ($student2resolve['statusID'] == 1){
+                            $multipleresolved++;
+                            $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                            $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                        }
+                    }
                 }
             }
         }
@@ -990,7 +1002,7 @@ var_dump($img);
         $Csv->export_simple(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple);
 //var_dump($found_multiple);
 //var_dump($notfound_pos);
-        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances;          
+        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;          
     }
     
     /*
