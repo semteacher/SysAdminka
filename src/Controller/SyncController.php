@@ -792,6 +792,10 @@ var_dump($name);
                         $rename++;
                         $data['f_id']=$student_of_asu_mkr['F1'];
                     }
+                    if ($student_of_asu_mkr['F1']!=$student_ldb->school_id){
+                        $rename++;
+                        $data['school_id']=$student_of_asu_mkr['F1'];  //for gsync
+                    }
                     if ($student_of_asu_mkr['PNSP1']!=$student_ldb->pnsp_id){
                         $rename++;
                         $data['pnsp_id']=$student_of_asu_mkr['PNSP1'];
@@ -799,6 +803,10 @@ var_dump($name);
                     if ($student_of_asu_mkr['SP1']!=$student_ldb->sp_id){
                         $rename++;
                         $data['sp_id']=$student_of_asu_mkr['SP1'];
+                    }
+                    if ($student_of_asu_mkr['SP1']!=$student_ldb->special_id){
+                        $rename++;
+                        $data['special_id']=$student_of_asu_mkr['SP1'];   //for gsync
                     }
                     if ($student_of_asu_mkr['ST71']!=$student_ldb->grade_level){ //TODO: where is this? ST71 - for NFAU??
                         $rename++;
@@ -824,6 +832,12 @@ var_dump($name);
                     //    $rename++;
                     //    $data['status_id'] = 1;
                     //}
+                    
+                    if (($student_of_asu_mkr['std11']==2||$student_of_asu_mkr['std11']==4)&&($student_ldb->status_id==1)){
+                        $data['status_id'] = 10;  //Move student TO archive:
+                    } elseif ($student_ldb->status_id==10&&$student_of_asu_mkr['std11']==0) {
+                        $data['status_id'] = 1;    //Get student FROM archive:
+                    }
                     
                     if($rename>0){
 //var_dump("RENAME-strart=".$data);
@@ -855,7 +869,7 @@ var_dump($name);
                     } else {
                         $data['student_id'] = $student_of_asu_mkr['ST1'];    //for gsync
                     }
-                    $student_of_asu_mkr['std11']==0 ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
+                    ($student_of_asu_mkr['std11']<>2||$student_of_asu_mkr['std11']<>4) ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
                     
                     $student_login_clone = $this->Students->find()
                         ->where(['user_name' => $name['uname']])
