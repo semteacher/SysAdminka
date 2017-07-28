@@ -10,6 +10,8 @@
         <tr>
             <th data-filterable="select" data-sortable="true" data-sort-order="2"><?= $this->Paginator->sort('school_id') ?></th>
             <th data-filterable="text" data-sortable="true" data-sort-order="2"><?= $this->Paginator->sort('name') ?></th>
+            <th data-filterable="select" data-sortable="true" data-sort-order="2"><?= $this->Paginator->sort('cont_id') ?></th>
+            <th data-filterable="select" data-sortable="true" data-sort-order="2"><?= $this->Paginator->sort('f_id') ?>(ASU)</th>
             <th class="actions"><?= __('Actions') ?></th>
         </tr>
     </thead>
@@ -18,6 +20,8 @@
         <tr>
             <td><?= $this->Number->format($school->school_id) ?></td>
             <td><?= $this->Text->autoParagraph(h($school->name)) ?></td>
+            <td><?= $this->Number->format($school->cont_id) ?></td>
+            <td><?= $this->Number->format($school->f_id) ?></td>
             <td class="actions">
                 <?= $this->Html->link(__('Edit'), ['action' => 'edit', $school->id],['class'=>'btn btn-warning']) ?>
                 <?= $this->Html->link(__('Delete'), ['action' => 'delete', $school->id],['class'=>'btn btn-danger']) ?>

@@ -49,7 +49,9 @@ class SchoolsTable extends Table
             ])
             ->allowEmpty('school_id', 'create')
             ->requirePresence('name', 'create')
-            ->notEmpty('name');
+            ->notEmpty('name')
+            ->allowEmpty('cont_id', 'create')
+            ->allowEmpty('f_id', 'create');
 
 
         return $validator;

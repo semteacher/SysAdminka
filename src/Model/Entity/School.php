@@ -16,7 +16,9 @@ class School extends Entity
      */
     protected $_accessible = [
         'name' => true,
-        'school_id' => true
+        'school_id' => true,
+        'cont_id'=> true,
+        'f_id'=> true
     ];
 
 

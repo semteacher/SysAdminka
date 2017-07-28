@@ -15,6 +15,9 @@
         ?>
         <fieldset <?= $disabled ?>>
             <?php
+                echo $this->Form->input('cont_id',['class'=>'form-control','type'=>'text']);
+            ?>        
+            <?php
                 echo $this->Form->input('pnsp_id',['class'=>'form-control','type'=>'text']);
             ?>
             <?php

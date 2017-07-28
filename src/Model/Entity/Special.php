@@ -18,13 +18,13 @@ class Special extends Entity
         'name' => true,
         'special_id' => true,
         'code' => true,
+        'cont_id' => true,
         'pnsp_id' => true,
         'sp_id' => true,
     ];
 
-//    protected function _getName()
-//    {
-//        return $this->_properties['name'] . '(' .
-//        $this->_properties['code'].')';
-//    }
+    protected function _getName()
+    {
+        return $this->_properties['name'];
+    }
 }

@@ -271,13 +271,7 @@ class SyncController extends AppController
         if ($this->request->is('post')) {
             if ($this->request->data(['special'])==on){
                 $this->_get_speciality();
-                //$this->_get_speciality_asu_mkr();
-                //$this->_sync_ASU_with_LDB_spec();
                 $this->_sync_C_with_LDB_spec();
-            }
-            if ($this->request->data(['specials_asumkr'])==on){
-                $this->_get_speciality_asu_mkr();
-                $this->_sync_ASU_with_LDB_spec();
             }
             if ($this->request->data['archive']==on){
                 $this->_sync_archive();
@@ -288,13 +282,20 @@ class SyncController extends AppController
             }
             
             //----------ASU MKR actions begin------------------
+            if ($this->request->data(['specials_asumkr'])==on){
+                $this->_get_speciality_asu_mkr();
+                $this->_sync_ASU_with_LDB_spec();
+            }
             if ($this->request->data(['all_students_asumkr'])==on){
                  $this->_get_students_asu_mkr();
                  $this->_sync_ASU_with_LDB_users();
             }
+            if ($this->request->data(['init_ldb_dbstructure_upgrade'])==on){
+                 $this->_initial_LDB_dbstructure_upgrade();
+            }
             if ($this->request->data(['ldb_names_cleanup'])==on){
                  $this->_LDB_names_cleanup();
-            }
+            }            
             if ($this->request->data(['init_all_affiliation_asumkr'])==on){
                  $this->_initial_update_ldb_affiliation_ids();
             }            
@@ -333,7 +334,7 @@ class SyncController extends AppController
                 $data['statistics']=json_encode($this->options);
                 $data['date']=mktime();
                 if ($this->Synchronized->save($data)) {
-                    $this->message[]['message']='Sync is Ok. DB write status Ok. New students: '.options['new_student'].', renamed students:'.options['rename_student'];
+                    $this->message[]['message']='Sync is Ok. DB write status Ok. New students: '.$this->options['new_student'].', renamed students:'.$this->options['rename_student'];
                 }
             }
             $this->Flash->error_form($this->message);
@@ -776,7 +777,7 @@ where
             // Generate new username
             $tmpname = explode(" ", $name['fname']);
             $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
-//var_dump($name);                    
+var_dump($name);                    
             // search Local Database for an existing user:
             if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
                 //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -802,13 +803,21 @@ where
                         $rename++;
                         $data['f_id']=$student_of_asu_mkr['F1'];
                     }
-                    if ($student_of_asu_mkr['PNSP_ID']!=$student_ldb->pnsp_id){
+                    if ($student_of_asu_mkr['F1']!=$student_ldb->school_id){
                         $rename++;
-                        $data['pnsp_id']=$student_of_asu_mkr['PNSP_ID'];
+                        $data['school_id']=$student_of_asu_mkr['F1'];  //for gsync
                     }
-                    if ($student_of_asu_mkr['SP_ID']!=$student_ldb->sp_id){
+                    if ($student_of_asu_mkr['PNSP1']!=$student_ldb->pnsp_id){
                         $rename++;
-                        $data['sp_id']=$student_of_asu_mkr['SP_ID'];
+                        $data['pnsp_id']=$student_of_asu_mkr['PNSP1'];
+                    }
+                    if ($student_of_asu_mkr['SP1']!=$student_ldb->sp_id){
+                        $rename++;
+                        $data['sp_id']=$student_of_asu_mkr['SP1'];
+                    }
+                    if ($student_of_asu_mkr['SP1']!=$student_ldb->special_id){
+                        $rename++;
+                        $data['special_id']=$student_of_asu_mkr['SP1'];   //for gsync
                     }
                     if ($student_of_asu_mkr['ST71']!=$student_ldb->grade_level){ //TODO: where is this? ST71 - for NFAU??
                         $rename++;
@@ -835,6 +844,12 @@ where
                     //    $data['status_id'] = 1;
                     //}
                     
+                    if (($student_of_asu_mkr['std11']==2||$student_of_asu_mkr['std11']==4)&&($student_ldb->status_id==1)){
+                        $data['status_id'] = 10;  //Move student TO archive:
+                    } elseif ($student_ldb->status_id==10&&$student_of_asu_mkr['std11']==0) {
+                        $data['status_id'] = 1;    //Get student FROM archive:
+                    }
+                    
                     if($rename>0){
 //var_dump("RENAME-strart=".$data);
                             if ($this->Students->save($data)) {
@@ -849,17 +864,23 @@ where
                     //add a new student
                     $data = $this->Students->newEntity();
                     $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
+                    $data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
                     $data['f_id'] = $student_of_asu_mkr['F1'];
-                    $data['pnsp_id'] = $student_of_asu_mkr['PNSP_ID'];
-                    $data['sp_id'] = $student_of_asu_mkr['SP_ID'];
+                    $data['pnsp_id'] = $student_of_asu_mkr['PNSP1'];
+                    $data['sp_id'] = $student_of_asu_mkr['SP1'];
+                    $data['special_id'] = $student_of_asu_mkr['SP1']; //for gsync
                     $data['groupnum'] = $student_of_asu_mkr['GR3'];
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
                     $data['user_name'] = $name['uname'];
                     $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
                     $data['password'] = $this->_generate_pass();
-                    $data['student_id'] = $student_of_asu_mkr['ST108'];
-                    $student_of_asu_mkr['std11']==0 ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
+                    if ($student_of_asu_mkr['ST108']<>''){   //should be newer executed but for compatibility
+                        $data['student_id'] = $student_of_asu_mkr['ST108'];  //for gsync
+                    } else {
+                        $data['student_id'] = $student_of_asu_mkr['ST1'];    //for gsync
+                    }
+                    ($student_of_asu_mkr['std11']<>2||$student_of_asu_mkr['std11']<>4) ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
                     
                     $student_login_clone = $this->Students->find()
                         ->where(['user_name' => $name['uname']])
@@ -869,12 +890,15 @@ where
                         $data['status_id'] = 3;
                         $this->options['clone_login_in students']++;
                     }
-//var_dump("NEW-strart=".$data);
+var_dump("NEW-start=".$data);
                     if ($this->Students->save($data)) {
                         $new_student_for_email++;
                         $this->options['new_student']++;
                         $this->status=true;
+var_dump("NEW-OK=".$data['asumkr_id']);                        
 //                        $this->message[]['message']='New students: '.$this->options['new_student'];
+                    } else {
+var_dump("NEW-failed=".$data['asumkr_id']);
                     }
                 }
             }
@@ -913,14 +937,18 @@ var_dump($img);
     private function _initial_update_ldb_affiliation_ids() {
         //$this->loadModel('Students');
         $conn = ConnectionManager::get('default');
-        // TODO: Update faculties id's. Execute once - no more necessary
-        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`)";
+        // Update faculties id's. Execute once - no more necessary
+        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`); 
+        UPDATE `schools` SET `schools`.`school_id` = `schools`.`f_id`;
+        UPDATE `students` SET `students`.`school_id`=`students`.`f_id`; ";
         $faculty_results = $conn->execute($updatefaculty_sql);
 //var_dump($faculty_results);
         // TODO: update specialities id's. Execute once - no more necessary
         $updatespeciality_sql = "UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
-            `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);";
+            `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);
+               UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
+               UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
         $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($speciality_results);        
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
@@ -934,6 +962,7 @@ var_dump($img);
         $notfound = 0;
         $singleinstance = 0;
         $multipleinstances = 0;
+        $multipleresolved = 0;
         
          $notfound_pos = array();
          $found_multiple = array();
@@ -964,7 +993,7 @@ var_dump($img);
             if (isset($students_ldb)){
                 foreach($students_ldb as $student_ldb){
                     $found_pos[$student_ldb->id] = $student_ldb->student_id;
-                    $found_pos2[] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name);
+                    $found_pos2[] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name, 'statusID'=>$student_ldb->status_id);
                 }
                 
                 if (count($found_pos)==0) { // NOT FOUND!
@@ -981,6 +1010,14 @@ var_dump($img);
                 } else { // found - MULTIPLE OCCYURENCES
                     $multipleinstances++;
                     $found_multiple = array_merge($found_multiple,$found_pos2);
+                    //update ASU MRR DB for only active student's
+                    foreach ($found_pos2 as $student2resolve) {
+                        if ($student2resolve['statusID'] == 1){
+                            $multipleresolved++;
+                            $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                            $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                        }
+                    }
                 }
             }
         }
@@ -990,7 +1027,7 @@ var_dump($img);
         $Csv->export_simple(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple);
 //var_dump($found_multiple);
 //var_dump($notfound_pos);
-        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances;          
+        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;          
     }
     
     private function _initial_update_asumkr_portal_userdata (){
@@ -1070,6 +1107,46 @@ var_dump($img);
             $this->Students->save($Student_ldb);
         }
         $this->message[]['message'] = "The Student`s names has been updated and saved";
+    }
+    
+    private function _initial_LDB_dbstructure_upgrade(){
+        $conn = ConnectionManager::get('default');
+        $updatefaculty_structure_sql = "ALTER TABLE `schools` COLLATE utf8_general_ci;
+                                        ALTER TABLE `schools` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+                                        ALTER TABLE `schools` ADD cont_id int(3) AFTER name;
+                                        ALTER TABLE `schools` ADD f_id int(3) AFTER cont_id;
+                                        UPDATE `schools` SET cont_id = school_id; ";
+        //$conn->begin();
+        //$faculty_results = $conn->query($updatefaculty_structure_sql);
+        //$conn->commit();
+
+        $updatespecials_structure_sql = "ALTER TABLE `specials` COLLATE utf8_general_ci; 
+                                         ALTER TABLE `specials` ADD cont_id int AFTER code; 
+                                         ALTER TABLE `specials` ADD pnsp_id int AFTER cont_id; 
+                                         ALTER TABLE `specials` ADD sp_id int AFTER pnsp_id; 
+                                         UPDATE `specials` SET cont_id = special_id; ";
+        
+        $updatestyudent_structure_sql = "ALTER TABLE `students` ADD c_stud_id text AFTER send_photo_google; 
+                                         ALTER TABLE `students` ADD c_school_id int(3) AFTER c_stud_id; 
+                                         ALTER TABLE `students` ADD c_sprec_id int(5) AFTER c_school_id; 
+                                         ALTER TABLE `students` ADD f_id int(3) AFTER c_sprec_id; 
+                                         ALTER TABLE `students` ADD pnsp_id int AFTER f_id; 
+                                         ALTER TABLE `students` ADD sp_id int AFTER pnsp_id; 
+                                         ALTER TABLE `students` ADD asumkr_id int AFTER sp_id;
+                                         UPDATE `students` SET c_stud_id = student_id; 
+                                         UPDATE `students` SET c_sprec_id = special_id; 
+                                         UPDATE `students` SET c_school_id = school_id; ";
+                                         
+        $update_structure_sql =  $updatefaculty_structure_sql.$updatespecials_structure_sql.$updatestyudent_structure_sql;
+        //apply DB structure update
+        $conn->begin();
+        $results = $conn->execute($update_structure_sql);
+        $conn->commit();
+        if ($results){
+            $this->message[]['message']='LDB tables structure updated SUCCESSFULY';
+        } else {
+            $this->message[]['message']='FAILED to update LDB tables structure!';
+        }
     }
     
     private function _asu_portal_setPassword($password,$salt){

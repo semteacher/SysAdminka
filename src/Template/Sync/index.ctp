@@ -3,7 +3,7 @@
     <?= $this->Form->create($student,['id'=>'sync_form']);?>
     <fieldset>
         <legend><?= __('Options sync') ?></legend>
-             <div class="form-group">
+            <div class="form-group">
                 <div class="row">
                         <div class="col-sm-6 col-md-3">
                             <div class="thumbnail sync">
@@ -189,13 +189,65 @@
                             </fieldset>
                         </div>
                     </div>
-             </div>
-             <div class="row">
-    <div class="form-group">
-            <button type="submit" class="btn btn-success">Start</button>
-    </div>             
-             <div>
-             <div class="row">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <button type="submit" class="btn btn-success">Start</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <legend><?= __('Contingent -> ASU MKR Migration options') ?></legend>            
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+
+                                <?= $this->Html->image("SyncArchiv.png", [
+                                    "alt" => "Sync",
+                                    "class"=>"col-xs-12 hidden-xs"
+                                ]);?>
+                                <div class="caption">
+                                    <h3 class="">1: LDB DB structure udgrade</h3>
+                                    <p class="alert alert-danger">Time of processing less than 1 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="init_ldb_dbstructure_upgrade" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+
+                                <?= $this->Html->image("SyncUser.png", [
+                                    "alt" => "Sync",
+                                    "class"=>"col-xs-12 hidden-xs"
+                                ]);?>
+                                <div class="caption">
+                                    <h3 class="">2: LDB Names Clean-up</h3>
+                                    <p class="alert alert-danger">Time of processing less than 2 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="ldb_names_cleanup" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
+                </div>
+                <div class="row">
+                    <legend><?= __('3: Fill All ASU MKR new Faculty / Specialities ID`s before next steps!') ?></legend>            
+                </div>
+                <div class="row">
                         <div class="col-sm-6 col-md-3">
                             <div class="thumbnail sync">
                                 <label>
@@ -204,7 +256,7 @@
                                         "class"=>"col-xs-12 hidden-xs "
                                     ]);?>
                                 <div class="caption">
-                                    <h3 class="">ONLY ONCE! Set ASU MKR faculty/speciality IDs</h3>
+                                    <h3 class="">4: ONLY ONCE! ASU MKR faculty/speciality IDs -> LDB</h3>
                                    <p class="alert alert-danger">Time of synchronization is less than 1 minute</p>
                                     <div class="checkbox">
                                         <label>
@@ -223,31 +275,11 @@
                                         "class"=>"col-xs-12 hidden-xs "
                                     ]);?>
                                 <div class="caption">
-                                    <h3 class="">ONLY ONCE! LDB ContingentID->ASU MKR</h3>
+                                    <h3 class="">5: ONLY ONCE! LDB ContingentID->ASU MKR</h3>
                                    <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
                                     <div class="checkbox">
                                         <label>
                                             <input type="checkbox" name="init_all_students_asumkr" style="width:50px;height: 40px;">
-                                        </label>
-                                    </div>
-                                </div>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                            <div class="thumbnail sync">
-                                <label>
-
-                                <?= $this->Html->image("SyncArchiv.png", [
-                                    "alt" => "Sync",
-                                    "class"=>"col-xs-12 hidden-xs"
-                                ]);?>
-                                <div class="caption">
-                                    <h3 class="">LDB Names Clean-up (spaces removal)</h3>
-                                    <p class="alert alert-danger">Time of processing less than 5 minute</p>
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" name="ldb_names_cleanup" style="width:50px;height: 40px;">
                                         </label>
                                     </div>
                                 </div>
