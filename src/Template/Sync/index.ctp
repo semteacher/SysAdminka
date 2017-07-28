@@ -243,6 +243,11 @@
                                 </label>
                             </div>
                         </div>
+                </div>
+                <div class="row">
+                    <legend><?= __('3: Fill All ASU MKR new Faculty / Specialities ID`s before next steps!') ?></legend>            
+                </div>
+                <div class="row">
                         <div class="col-sm-6 col-md-3">
                             <div class="thumbnail sync">
                                 <label>
@@ -251,7 +256,7 @@
                                         "class"=>"col-xs-12 hidden-xs "
                                     ]);?>
                                 <div class="caption">
-                                    <h3 class="">ONLY ONCE! Set ASU MKR faculty/speciality IDs</h3>
+                                    <h3 class="">4: ONLY ONCE! ASU MKR faculty/speciality IDs -> LDB</h3>
                                    <p class="alert alert-danger">Time of synchronization is less than 1 minute</p>
                                     <div class="checkbox">
                                         <label>
@@ -270,7 +275,7 @@
                                         "class"=>"col-xs-12 hidden-xs "
                                     ]);?>
                                 <div class="caption">
-                                    <h3 class="">ONLY ONCE! LDB ContingentID->ASU MKR</h3>
+                                    <h3 class="">5: ONLY ONCE! LDB ContingentID->ASU MKR</h3>
                                    <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
                                     <div class="checkbox">
                                         <label>
