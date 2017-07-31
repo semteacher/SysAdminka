@@ -743,6 +743,7 @@ where
      */
     private function _sync_ASU_with_LDB_users(){
         $this->loadModel('Students');
+        $this->loadModel('Schools');
         $this->_max_id();
         //debug only
 //        $contyes = 0;
@@ -802,11 +803,18 @@ var_dump($name);
                     if ($student_of_asu_mkr['F1']!=$student_ldb->f_id){
                         $rename++;
                         $data['f_id']=$student_of_asu_mkr['F1'];
+                        //use old Contingent id for gsync
+                        $school = $this->Schools->find()
+                            ->where(['f_id' => $student_of_asu_mkr['F1']])
+                            ->first();
+                        if ($school) {
+                            $data['school_id'] = $school->school_id;   //for gsync
+                        }
                     }
-                    if ($student_of_asu_mkr['F1']!=$student_ldb->school_id){
-                        $rename++;
-                        $data['school_id']=$student_of_asu_mkr['F1'];  //for gsync
-                    }
+                    //if ($student_of_asu_mkr['F1']!=$student_ldb->school_id){
+                    //    $rename++;
+                    //    $data['school_id']=$student_of_asu_mkr['F1'];  //for gsync
+                    //}
                     if ($student_of_asu_mkr['PNSP1']!=$student_ldb->pnsp_id){
                         $rename++;
                         $data['pnsp_id']=$student_of_asu_mkr['PNSP1'];
@@ -864,8 +872,15 @@ var_dump($name);
                     //add a new student
                     $data = $this->Students->newEntity();
                     $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
-                    $data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
+                    //$data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
                     $data['f_id'] = $student_of_asu_mkr['F1'];
+                    //use old Contingent id for gsync
+                    $school = $this->Schools->find()
+                            ->where(['f_id' => $student_of_asu_mkr['F1']])
+                            ->first();
+                        if ($school) {
+                            $data['school_id'] = $school->school_id;   //for gsync
+                        }
                     $data['pnsp_id'] = $student_of_asu_mkr['PNSP1'];
                     $data['sp_id'] = $student_of_asu_mkr['SP1'];
                     $data['special_id'] = $student_of_asu_mkr['SP1']; //for gsync
@@ -938,9 +953,9 @@ var_dump($img);
         //$this->loadModel('Students');
         $conn = ConnectionManager::get('default');
         // Update faculties id's. Execute once - no more necessary
-        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`); 
-        UPDATE `schools` SET `schools`.`school_id` = `schools`.`f_id`;
-        UPDATE `students` SET `students`.`school_id`=`students`.`f_id`; ";
+        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`); ";
+    //    UPDATE `schools` SET `schools`.`school_id` = `schools`.`f_id`;
+    //    UPDATE `students` SET `students`.`school_id`=`students`.`f_id`; ";
         $faculty_results = $conn->execute($updatefaculty_sql);
 //var_dump($faculty_results);
         // TODO: update specialities id's. Execute once - no more necessary
@@ -949,7 +964,7 @@ var_dump($img);
             `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);
                UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
                UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
-        $speciality_results = $conn->execute($updatespeciality_sql);
+    //    $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($speciality_results);        
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
     }
