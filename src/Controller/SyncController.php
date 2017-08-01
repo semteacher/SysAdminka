@@ -344,7 +344,8 @@ class SyncController extends AppController
 
     private function _sync_archive(){
         $this->loadModel('Students');
-        $students = $this->Students->find()->where(['((grade_level > 9) OR ((grade_level IN (1,2,3)) AND (school_id=44)))']);
+        //$students = $this->Students->find()->where(['((grade_level > 9) OR ((grade_level IN (1,2,3)) AND (school_id=44)))']);
+        $students = $this->Students->find()->all();
         foreach($students as $student){
             $student_of_contingent = $this->contingent->gets("SELECT STUDENTS.ARCHIVE FROM STUDENTS WHERE STUDENTID LIKE '".$student->student_id."'");
             if ($student_of_contingent[1]['ARCHIVE']==1){
@@ -416,9 +417,9 @@ class SyncController extends AppController
                         $rename++;
                         $data['special_id']=$speciality_of_contingent['SPECIALITYID'];
                     }
-                    if ($speciality_of_contingent['SPECIALITY']!=$specials_ldb->name){
+                    if ($speciality_of_contingent['SPECIALITY'].' ('.$speciality_of_contingent['CODE'].')'!=$specials_ldb->name){
                         $rename++;
-                        $data['name']=$speciality_of_contingent['SPECIALITY']." (".$speciality_of_contingent['CODE'].")";
+                        $data['name']=$speciality_of_contingent['SPECIALITY'].' ('.$speciality_of_contingent['CODE'].')';
                     }
                     if ($speciality_of_contingent['CODE']!=$specials_ldb->code){
                         $rename++;
@@ -459,7 +460,7 @@ class SyncController extends AppController
         $this->_max_id();
         foreach($this->students as $student_of_contingent){
             $student_ldb = $this->Students->find()
-                ->where(['student_id ' => $student_of_contingent['STUDENTID']])
+                ->where(['student_id' => $student_of_contingent['STUDENTID']])
                 ->first();
             if ($student_of_contingent['STATUS']=='С'){
                 if (isset($student_ldb)){
@@ -490,11 +491,11 @@ class SyncController extends AppController
                         $rename++;
                         $data['last_name']=$name['lname'];
                     }
-                    if ($student_of_contingent['ARCHIVE']==true and $student_ldb->status_id!=10){
+                    if ($student_of_contingent['ARCHIVE']==1 and $student_ldb->status_id!=10){
                         $rename++;
                         $data['status_id'] = 10;
                         $this->options['archive_student']++;
-                    }else if ($student_of_contingent['ARCHIVE']==false and $student_ldb->status_id==10){
+                    }else if ($student_of_contingent['ARCHIVE']==0 and $student_ldb->status_id==10){
                         $rename++;
                         $data['status_id'] = 1;
                     }
@@ -538,13 +539,34 @@ class SyncController extends AppController
 //                        $this->message[]['message']='New students: '.$this->options['new_student'];
                     }
                 }
+            } else {
+                if (isset($student_ldb)){
+                    $rename=0;
+                    $data = $this->Students->get($student_ldb->id);
+                    if ($student_of_contingent['ARCHIVE']==1 and $student_ldb->status_id!=10){
+                        $rename++;
+                        $data['status_id'] = 10;
+                        $this->options['archive_student']++;
+                    }else if ($student_of_contingent['ARCHIVE']==0 and $student_ldb->status_id==10){
+                        $rename++;
+                        $data['status_id'] = 1;
+                    }
+                        if($rename>0){
+
+                            if ($this->Students->save($data)) {
+                                $this->options['rename_student']++;
+                                $this->status=true;
+//                                $this->message[]['message']='Editing students: '.$this->options['rename_student'];
+                            }
+                        }                
+                }
             }
         }
         if(($this->options['rename_student']==0) and ($this->options['new_student']==0)){
             $this->message[]['message']="Sorry, there are no new records in Contingent database";
         }
         if (count($new_student_for_email)>0){
-            $this->send_email($new_student_for_email,"New students in SysAdmin!");
+            $this->send_email($new_student_for_email,"There are ".$this->options['new_student']." new and ".$this->options['rename_student']." renamed students in SysAdmin!");
         }
     }
 
@@ -668,6 +690,7 @@ select
     gr.gr3,
     std.std7,
     std.std11,
+    std.std23,
     pnsp.pnsp1,
     sp.sp1
 from st
@@ -704,7 +727,8 @@ where
                 if (isset($specials_ldb)){
                     $rename=0;
                     $data = $this->Specials->find()->where(['pnsp_id'=>$specials_ldb->pnsp_id, 'sp_id ' => $specials_ldb->sp_id])->first();
-                    if ($speciality_of_asu_mkr['SPECIALITY']!=$specials_ldb->name){
+                    //use complex name
+                    if ($speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['SPECIALITY2']." ".$speciality_of_asu_mkr['CODE'].")" != $specials_ldb->name){
                         $rename++;
                         $data['name']=$speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['SPECIALITY2']." ".$speciality_of_asu_mkr['CODE'].")";
                     }
@@ -721,6 +745,7 @@ where
                     }
                 }else{
                     $data = $this->Specials->newEntity();
+                    $data['special_id'] = $speciality_of_asu_mkr['SP_ID'];
                     $data['pnsp_id'] = $speciality_of_asu_mkr['PNSP_ID'];
                     $data['sp_id'] = $speciality_of_asu_mkr['SP_ID'];
                     $data['name'] = $speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['SPECIALITY2']." ".$speciality_of_asu_mkr['CODE'].")";
@@ -735,6 +760,8 @@ where
         }
         if(($this->options['rename_specials']==0) and ($this->options['new_specials']==0)){
             $this->message[]['message']="Sorry, there are no new records in ASU MKR database";
+        } else {
+            $this->message[]['message']="There are ".$this->options['new_specials']." new and ".$this->options['rename_specials']." renamed  speciality records in LDB";
         }
     }
     
@@ -819,9 +846,9 @@ var_dump($name);
                         $rename++;
                         $data['special_id']=$student_of_asu_mkr['SP1'];   //for gsync
                     }
-                    if ($student_of_asu_mkr['ST71']!=$student_ldb->grade_level){ //TODO: where is this? ST71 - for NFAU??
+                    if ($student_of_asu_mkr['STD23']!=$student_ldb->grade_level){
                         $rename++;
-                        $data['grade_level']=$student_of_asu_mkr['ST71'];
+                        $data['grade_level']=$student_of_asu_mkr['STD23'];
                     }
                     if ($student_of_asu_mkr['GR3']!=$student_ldb->groupnum){
                         $rename++;
@@ -873,7 +900,7 @@ var_dump($name);
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
                     $data['user_name'] = $name['uname'];
-                    $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
+                    $data['grade_level'] = (!is_null($student_of_asu_mkr['STD23'])?$student_of_asu_mkr['STD23']:0);
                     $data['password'] = $this->_generate_pass();
                     if ($student_of_asu_mkr['ST108']<>''){   //should be newer executed but for compatibility
                         $data['student_id'] = $student_of_asu_mkr['ST108'];  //for gsync
