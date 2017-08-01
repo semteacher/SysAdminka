@@ -378,9 +378,9 @@ class SyncController extends AppController
                         $rename++;
                         $data['special_id']=$speciality_of_contingent['SPECIALITYID'];
                     }
-                    if ($speciality_of_contingent['SPECIALITY']!=$specials_ldb->name){
+                    if ($speciality_of_contingent['SPECIALITY'].' ('.$speciality_of_contingent['CODE'].')'!=$specials_ldb->name){
                         $rename++;
-                        $data['name']=$speciality_of_contingent['SPECIALITY'];
+                        $data['name']=$speciality_of_contingent['SPECIALITY'].' ('.$speciality_of_contingent['CODE'].')';
                     }
                     if ($speciality_of_contingent['CODE']!=$specials_ldb->code){
                         $rename++;
