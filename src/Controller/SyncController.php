@@ -686,6 +686,7 @@ select
     gr.gr3,
     std.std7,
     std.std11,
+    std.std23,
     pnsp.pnsp1,
     sp.sp1
 from st
@@ -834,9 +835,9 @@ var_dump($name);
                         $rename++;
                         $data['special_id']=$student_of_asu_mkr['SP1'];   //for gsync
                     }
-                    if ($student_of_asu_mkr['ST71']!=$student_ldb->grade_level){ //TODO: where is this? ST71 - for NFAU??
+                    if ($student_of_asu_mkr['STD23']!=$student_ldb->grade_level){
                         $rename++;
-                        $data['grade_level']=$student_of_asu_mkr['ST71'];
+                        $data['grade_level']=$student_of_asu_mkr['STD23'];
                     }
                     if ($student_of_asu_mkr['GR3']!=$student_ldb->groupnum){
                         $rename++;
@@ -888,7 +889,7 @@ var_dump($name);
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
                     $data['user_name'] = $name['uname'];
-                    $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
+                    $data['grade_level'] = (!is_null($student_of_asu_mkr['STD23'])?$student_of_asu_mkr['STD23']:0);
                     $data['password'] = $this->_generate_pass();
                     if ($student_of_asu_mkr['ST108']<>''){   //should be newer executed but for compatibility
                         $data['student_id'] = $student_of_asu_mkr['ST108'];  //for gsync
