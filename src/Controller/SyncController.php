@@ -715,7 +715,8 @@ where
                 if (isset($specials_ldb)){
                     $rename=0;
                     $data = $this->Specials->find()->where(['pnsp_id'=>$specials_ldb->pnsp_id, 'sp_id ' => $specials_ldb->sp_id])->first();
-                    if ($speciality_of_asu_mkr['SPECIALITY']!=$specials_ldb->name){
+                    //use complex name
+                    if ($speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['SPECIALITY2']." ".$speciality_of_asu_mkr['CODE'].")" != $specials_ldb->name){
                         $rename++;
                         $data['name']=$speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['SPECIALITY2']." ".$speciality_of_asu_mkr['CODE'].")";
                     }
@@ -732,6 +733,7 @@ where
                     }
                 }else{
                     $data = $this->Specials->newEntity();
+                    $data['special_id'] = $speciality_of_asu_mkr['SP_ID'];
                     $data['pnsp_id'] = $speciality_of_asu_mkr['PNSP_ID'];
                     $data['sp_id'] = $speciality_of_asu_mkr['SP_ID'];
                     $data['name'] = $speciality_of_asu_mkr['SPECIALITY']." (".$speciality_of_asu_mkr['SPECIALITY2']." ".$speciality_of_asu_mkr['CODE'].")";
@@ -746,6 +748,8 @@ where
         }
         if(($this->options['rename_specials']==0) and ($this->options['new_specials']==0)){
             $this->message[]['message']="Sorry, there are no new records in ASU MKR database";
+        } else {
+            $this->message[]['message']="There are ".$this->options['new_specials']." new and ".$this->options['rename_specials']." renamed  speciality records in LDB";
         }
     }
     
