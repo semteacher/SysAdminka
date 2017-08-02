@@ -682,6 +682,7 @@ select
     st.st3,
     st.st4,
     st.st32,
+    st.st71, 
     st.st74, 
     st.st75, 
     st.st76, 
@@ -690,7 +691,6 @@ select
     gr.gr3,
     std.std7,
     std.std11,
-    std.std23,
     pnsp.pnsp1,
     sp.sp1
 from st
@@ -854,9 +854,9 @@ var_dump($name);
                         $rename++;
                         $data['special_id']=$student_of_asu_mkr['SP1'];   //for gsync
                     }
-                    if ($student_of_asu_mkr['STD23']!=$student_ldb->grade_level){
+                    if ($student_of_asu_mkr['ST71']!=$student_ldb->grade_level){
                         $rename++;
-                        $data['grade_level']=$student_of_asu_mkr['STD23'];
+                        $data['grade_level']=$student_of_asu_mkr['ST71'];
                     }
                     if ($student_of_asu_mkr['GR3']!=$student_ldb->groupnum){
                         $rename++;
@@ -915,7 +915,7 @@ var_dump($name);
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
                     $data['user_name'] = $name['uname'];
-                    $data['grade_level'] = (!is_null($student_of_asu_mkr['STD23'])?$student_of_asu_mkr['STD23']:0);
+                    $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
                     $data['password'] = $this->_generate_pass();
                     if ($student_of_asu_mkr['ST108']<>''){   //should be newer executed but for compatibility
                         $data['student_id'] = $student_of_asu_mkr['ST108'];  //for gsync
@@ -988,10 +988,10 @@ var_dump($img);
         // TODO: update specialities id's. Execute once - no more necessary
         $updatespeciality_sql = "UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
-            `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`);
-               UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
-               UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
-    //    $speciality_results = $conn->execute($updatespeciality_sql);
+            `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`); ";
+    //           UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
+    //           UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
+        $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($speciality_results);        
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
     }
@@ -1023,7 +1023,7 @@ var_dump($img);
             }
             
             $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
-            
+var_dump($asu_mkr_search_fname);            
             $found_pos=array();
             $found_pos2=array();
 
@@ -1045,6 +1045,7 @@ var_dump($img);
                     $singleinstance++;
                     $found_keys = array_keys($found_pos);
                     $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+var_dump($found_pos[$found_keys[0]]);                    
                     // TODO: problem with st149 (int not enought) and sql dialect (1 not support bigint)
                     //$asu_mkr_update_sql = "UPDATE ST SET ST.ST200='".$found_pos[$found_keys[0]]."' WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                     //UPDATE ASU MKR DATABASE:
@@ -1058,6 +1059,7 @@ var_dump($img);
                             $multipleresolved++;
                             $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                             $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+var_dump($student2resolve);                            
                         }
                     }
                 }
