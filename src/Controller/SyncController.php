@@ -771,21 +771,7 @@ where
     private function _sync_ASU_with_LDB_users(){
         $this->loadModel('Students');
         $this->loadModel('Schools');
-        $this->_max_id();
-        //debug only
-//        $contyes = 0;
-//        $contno = 0;
-//        foreach($this->students_mkr as $student_of_asu_mkr){
-//            if ($student_of_asu_mkr['ST108']<>''){
-//                $contyes++;
-//var_dump($student_of_asu_mkr['ST108']."-".$student_of_asu_mkr['ST2']." ".$student_of_asu_mkr['ST3']." ".$student_of_asu_mkr['ST4']);
-//            } else {
-//                $contno++;
-//var_dump($student_of_asu_mkr['ST1']."-".$student_of_asu_mkr['ST2']." ".$student_of_asu_mkr['ST3']." ".$student_of_asu_mkr['ST4']."-".$student_of_asu_mkr['ST108']);            
-//            }
-//        }
-//var_dump('contyes='.$contyes.' contno='.$contno);
-//die();
+        //$this->_max_id();
         
         foreach($this->students_mkr as $student_of_asu_mkr){
             
@@ -805,10 +791,10 @@ where
             // Generate new username
             $tmpname = explode(" ", $name['fname']);
             $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
-var_dump($name);                    
+//var_dump($name);                    
             // search Local Database for an existing user:
             if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
-                //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 $student_ldb = $this->Students->find()
                     ->where(['student_id' => $student_of_asu_mkr['ST108']])
                     ->first();
@@ -838,10 +824,6 @@ var_dump($name);
                             $data['school_id'] = $school->school_id;   //for gsync
                         }
                     }
-                    //if ($student_of_asu_mkr['F1']!=$student_ldb->school_id){
-                    //    $rename++;
-                    //    $data['school_id']=$student_of_asu_mkr['F1'];  //for gsync
-                    //}
                     if ($student_of_asu_mkr['PNSP1']!=$student_ldb->pnsp_id){
                         $rename++;
                         $data['pnsp_id']=$student_of_asu_mkr['PNSP1'];
@@ -891,12 +873,10 @@ var_dump($name);
                                 $this->options['rename_student']++;
 //var_dump("RENAME-ok! ".$this->options['rename_student']);                                
                                 $this->status=true;
-//                                $this->message[]['message']='Editing students: '.$this->options['rename_student'];
                             }
                     }
-
                 }else{
-                    //add a new student
+                    //add a new one student
                     $data = $this->Students->newEntity();
                     $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
                     //$data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
@@ -905,9 +885,9 @@ var_dump($name);
                     $school = $this->Schools->find()
                             ->where(['f_id' => $student_of_asu_mkr['F1']])
                             ->first();
-                        if ($school) {
-                            $data['school_id'] = $school->school_id;   //for gsync
-                        }
+                    if ($school) {
+                        $data['school_id'] = $school->school_id;   //for gsync
+                    }
                     $data['pnsp_id'] = $student_of_asu_mkr['PNSP1'];
                     $data['sp_id'] = $student_of_asu_mkr['SP1'];
                     $data['special_id'] = $student_of_asu_mkr['SP1']; //for gsync
@@ -923,7 +903,6 @@ var_dump($name);
                         $data['student_id'] = $student_of_asu_mkr['ST1'];    //for gsync
                     }
                     ($student_of_asu_mkr['std11']<>2||$student_of_asu_mkr['std11']<>4) ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
-                    
                     $student_login_clone = $this->Students->find()
                         ->where(['user_name' => $name['uname']])
                         ->first();
@@ -932,25 +911,25 @@ var_dump($name);
                         $data['status_id'] = 3;
                         $this->options['clone_login_in students']++;
                     }
-var_dump("NEW-start=".$data);
+//var_dump("NEW-start=".$data);
                     if ($this->Students->save($data)) {
                         $new_student_for_email++;
                         $this->options['new_student']++;
                         $this->status=true;
-var_dump("NEW-OK=".$data['asumkr_id']);                        
-//                        $this->message[]['message']='New students: '.$this->options['new_student'];
+//var_dump("NEW-OK=".$data['asumkr_id']);
                     } else {
-var_dump("NEW-failed=".$data['asumkr_id']);
+                        $this->options['new_student_failed']++;
+//var_dump("NEW-failed=".$data['asumkr_id']);
                     }
                 }
             }
         }
         if(($this->options['rename_student']==0) and ($this->options['new_student']==0)){
-            $this->message[]['message']="Sorry, there are no new records in ASU MKR database";
+            $this->message[]['message']="Sorry, there are no new records in ASU MKR database. Also, ".$this->options['new_student_failed']." students records failed to create!";
         }
         if (count($new_student_for_email)>0){
             //TODO: temporarily disabled!!!
-            //$this->send_email($new_student_for_email,"New students in SysAdmin!");
+            //$this->send_email($new_student_for_email,"There are ".$this->options['new_student']." new students in SysAdmin!. Also, ".$this->options['new_student_failed']." students records failed to create!");
         }
     }
 
@@ -972,7 +951,7 @@ var_dump($img);
                 ibase_blob_close($students_mkr_photo[0]['PHOTO']);
             }
         }
-        $this->message[]['message']='Sync photos ASU MKR-> LDB was successfully';
+        $this->message[]['message']='Sync photos ASU MKR -> LDB was successfully';
 
     }    
     
@@ -984,7 +963,6 @@ var_dump($img);
     //    UPDATE `schools` SET `schools`.`school_id` = `schools`.`f_id`;
     //    UPDATE `students` SET `students`.`school_id`=`students`.`f_id`; ";
         $faculty_results = $conn->execute($updatefaculty_sql);
-//var_dump($faculty_results);
         // TODO: update specialities id's. Execute once - no more necessary
         $updatespeciality_sql = "UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
@@ -992,7 +970,6 @@ var_dump($img);
     //           UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
     //           UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
         $speciality_results = $conn->execute($updatespeciality_sql);
-//var_dump($speciality_results);        
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
     }
     
@@ -1023,7 +1000,7 @@ var_dump($img);
             }
             
             $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
-var_dump($asu_mkr_search_fname);            
+//var_dump($asu_mkr_search_fname);            
             $found_pos=array();
             $found_pos2=array();
 
@@ -1045,7 +1022,7 @@ var_dump($asu_mkr_search_fname);
                     $singleinstance++;
                     $found_keys = array_keys($found_pos);
                     $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
-var_dump($found_pos[$found_keys[0]]);                    
+//var_dump($found_pos[$found_keys[0]]);                    
                     // TODO: problem with st149 (int not enought) and sql dialect (1 not support bigint)
                     //$asu_mkr_update_sql = "UPDATE ST SET ST.ST200='".$found_pos[$found_keys[0]]."' WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                     //UPDATE ASU MKR DATABASE:
@@ -1059,7 +1036,7 @@ var_dump($found_pos[$found_keys[0]]);
                             $multipleresolved++;
                             $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                             $results = $this->asu_mkr->sets($asu_mkr_update_sql);
-var_dump($student2resolve);                            
+//var_dump($student2resolve);                            
                         }
                     }
                 }
@@ -1069,8 +1046,6 @@ var_dump($student2resolve);
         $Csv = new CsvComponent($this->options_csv);
         $Csv->export_simple(ROOT.DS."webroot".DS."files/notfound.csv", $notfound_pos);
         $Csv->export_simple(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple);
-//var_dump($found_multiple);
-//var_dump($notfound_pos);
         $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;          
     }
     
@@ -1086,9 +1061,8 @@ var_dump($student2resolve);
             $this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);           
             if (is_null($this->asu_mkr_portal_users)&&!is_null($student_ldb->asumkr_id)){
 //var_dump($student_ldb);
-                $uidmaxarr = $this->_asu_portal_get_maxuserid();
-                if (is_array($uidmaxarr)){
-                    $new_id = $uidmaxarr[1]['MAX']+1;
+                $new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
+                if ($new_id){
 //var_dump($new_id);                
                     $salt = $this->_asu_portal_generateSalt();
                     $pass = $this->_asu_portal_setPassword($student_ldb->password, $salt);
@@ -1124,7 +1098,8 @@ var_dump($student2resolve);
      * clean-up string (especially - for names clean-up)
      */
     private function _name_cleanup($str){
-        if ($str[0]==' '){$str = substr($str, 1);}  //TODO: Remove all leading and trailing spaces 
+        //if ($str[0]==' '){$str = substr($str, 1);}  //TODO: Remove all leading and trailing spaces 
+        $str = trim($str);
         $str = str_replace("(","",$str);
         $str = str_replace(")","",$str);
         $str = str_replace("-","",$str);
@@ -1206,8 +1181,4 @@ var_dump($student2resolve);
 
 		return $salt;  //$this->u9 in asu
 	}
-    
-    private function _asu_portal_get_maxuserid(){
-        return $this->asu_mkr->gets("select max(u1) from users;");
-    }
 }
