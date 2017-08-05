@@ -32,11 +32,11 @@
         >
         <thead>
         <tr>
-            <th style="max-width:120px" data-filterable="text" class='col-xs-2 hidden-xs hidden-sm' data-sortable="true">Department</th>
-            <th style="max-width:120px" data-filterable="text" class='col-xs-2 hidden-xs hidden-sm' data-sortable="true" data-sort-order="2">Special</th>
-            <th style="max-width:20px" class='col-xs-1 hidden-xs hidden-sm' data-filterable="select" data-sortable="true" data-sort-order="2">Sem</th>
-            <th style="max-width:120px" class='hidden-xs hidden-sm' data-filterable="text" data-sortable="true" data-sort-order="2">Student_id</th>
-            <th style="max-width:20px" class='col-xs-1 hidden-xs hidden-sm' data-filterable="select" data-sortable="true" data-sort-order="2">Group</th>
+            <th style="max-width:120px" class="col-xs-2 hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">Department</th>
+            <th style="max-width:120px" class="col-xs-2 hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">Special</th>
+            <th style="max-width:20px" class="col-xs-1 hidden-xs hidden-sm" data-filterable="select" data-sortable="true" data-sort-order="2">Sem</th>
+            <th style="max-width:120px" class="hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">Student_id</th>
+            <th style="max-width:20px" class="col-xs-1 hidden-xs hidden-sm" data-filterable="select" data-sortable="true" data-sort-order="2">Group</th>
             <th style="max-width:50px" data-filterable="text" data-sortable="true" data-sort-order="2">First_name</th>
             <th style="max-width:50px" data-filterable="text" data-sortable="true" data-sort-order="2">Last_name</th>
             <th style="max-width:50px" data-filterable="text" data-sortable="true" data-sort-order="2">User_name</th>
