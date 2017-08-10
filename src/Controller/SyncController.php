@@ -665,7 +665,7 @@ class SyncController extends AppController
      */
     private function _get_speciality_asu_mkr(){
         $this->speciality_mkr = $this->asu_mkr->gets("
-            SELECT SP.SP1 AS SP_ID, PNSP.PNSP1 AS PNSP_ID, PNSP.PNSP2 AS SPECIALITY, SP.SP2 AS SPECIALITY2, SP.SP4 AS CODE FROM SP inner join PNSP ON (PNSP.PNSP1=SP.SP11) WHERE  SP.SP1>0
+            SELECT SP.SP1 AS SP_ID, PNSP.PNSP1 AS PNSP_ID, PNSP.PNSP2 AS SPECIALITY, SP.SP2 AS SPECIALITY2, SP.SP4 AS CODE, SP.SP14 AS LEVEL FROM SP left join PNSP ON (PNSP.PNSP1=SP.SP11) WHERE  SP.SP1>0
             ");          
     }
     
