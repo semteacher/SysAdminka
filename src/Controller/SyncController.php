@@ -966,9 +966,9 @@ var_dump($img);
         // TODO: update specialities id's. Execute once - no more necessary
         $updatespeciality_sql = "UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
-            `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`); ";
-    //           UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
-    //           UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
+            `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`); 
+               UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
+               UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
         $speciality_results = $conn->execute($updatespeciality_sql);
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
     }
@@ -1058,7 +1058,8 @@ var_dump($img);
         $students_ldb = $this->Students->find('all');
         foreach($students_ldb as $student_ldb){
             //check if user has been already registered on portal
-            $this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);           
+            $this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);
+//var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
             if (is_null($this->asu_mkr_portal_users)&&!is_null($student_ldb->asumkr_id)){
 //var_dump($student_ldb);
                 $new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
@@ -1066,8 +1067,9 @@ var_dump($img);
 //var_dump($new_id);                
                     $salt = $this->_asu_portal_generateSalt();
                     $pass = $this->_asu_portal_setPassword($student_ldb->password, $salt);
+                    $u12key = $this->_asu_portal_generateU12();
                     // SQL to create a new portal user 
-                    $asu_mkr_insert_sql = "INSERT INTO users (u1,u2,u3,u4,u5,u6,u7,u8,u9) VALUES(
+                    $asu_mkr_insert_sql = "INSERT INTO users (u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u12) VALUES(
                                             ".$new_id.",
                                             '".$student_ldb->user_name."',
                                             '".$pass."',
@@ -1076,8 +1078,9 @@ var_dump($img);
                                             ".$student_ldb->asumkr_id.",
                                             0,
                                             0,
-                                            '".$salt."'
-                                            );";
+                                            '".$salt."',
+                                            0,
+                                            '".$u12key."');";
 //print_r($asu_mkr_insert_sql);
                     $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
                     if ($results){
@@ -1181,4 +1184,12 @@ var_dump($img);
 
 		return $salt;  //$this->u9 in asu
 	}
+
+	protected function _asu_portal_generateU12(){
+		$token = openssl_random_pseudo_bytes(10);
+		$key   = bin2hex($token);
+        return $key;
+		//$this->saveAttributes(array('u12'=>$key));
+	}
+    
 }
