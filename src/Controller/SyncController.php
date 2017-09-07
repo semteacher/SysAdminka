@@ -638,6 +638,7 @@ class SyncController extends AppController
         $str = str_replace(":","",$str);
         $str = str_replace(".","",$str);
         $str = str_replace("`","",$str);
+        $str = str_replace("’","",$str);
         $str = str_replace("\"","",$str);
         $fullname = explode(" ", $str);
         $name['lname']=$fullname[0];
