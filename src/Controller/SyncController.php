@@ -706,6 +706,19 @@ where
             ");
     }
     
+    /*
+     * Get teachers form ASU MKR DataBase
+     */
+    private function _get_teachers_asu_mkr(){
+        $this->teachers_mkr= $this->asu_mkr->gets("
+select 
+    p.p3,
+    p.p4,
+    p.p5,
+from p    
+    ");    
+    }
+    
     private function _get_asu_mkr_portal_user($username, $usertype=0){
         unset($this->asu_mkr_portal_users);
         $this->asu_mkr_portal_users = $this->asu_mkr->gets("
