@@ -1,6 +1,7 @@
 <div class="col-sm-12 col-md-12 col-lg-12 col-xs-12">
     <?= $modal_google=='true' ? $this->element('/modal/form_google_ajax') : ''; ?>
-    <?= $this->Form->create($student,['id'=>'sync_form']);?>
+    <?= $this->Form->create($student,['id'=>'sync_form', 'enctype'=>'multipart/form-data']);?>
+    <?= $this->Flash->render() ?>
     <fieldset>
         <legend><?= __('Options sync') ?></legend>
             <div class="form-group">
@@ -196,6 +197,20 @@
                     <button type="submit" class="btn btn-success">Start</button>
                 </div>
             </div>
+            <div class="form-group">
+                <div class="row">
+                    <legend><?= __('Teachers XLS -> ASU MKR Portal users creation') ?></legend>            
+                </div>
+                <div class="content">
+                    
+                    <div class="upload-frm">
+                        <?php //echo $this->Form->create($uploadData, ['type' => 'file']); ?>
+                        <?php echo $this->Form->input('file', ['type' => 'file', 'class' => 'form-control']); ?>
+                        <?php echo $this->Form->button(__('Upload File and Process Teacher\'s Merging'), ['type'=>'submit', 'class' => 'btn btn-success']); ?>
+                        <?php //echo $this->Form->end(); ?>
+                    </div>
+                </div>
+            </div>            
             <div class="form-group">
                 <div class="row">
                     <legend><?= __('Contingent -> ASU MKR Migration options') ?></legend>            
