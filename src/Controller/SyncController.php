@@ -372,11 +372,18 @@ var_dump($this->request->data['file']['name']);
                 $fileName = $this->request->data['file']['name'];
                 $uploadPath = ROOT.DS."webroot".DS."files/teachers/";
                 $uploadFile = $uploadPath.$fileName;
-                if(move_uploaded_file($this->request->data['file']['tmp_name'],$uploadFile)){
-                    $this->message[]['message']="File has been uploaded";
-                    //_initial_update_asumkr_portal_teacherdata($uploadFile);
-                }else{
-                    $this->Flash->error(__('Unable to upload file, please try again.'));
+                $uploadFileExt=strtolower(end(explode('.',$_FILES['file']['name'])));
+                $expensions= array("csv");
+                
+                if(in_array($uploadFileExt,$expensions)=== false) {
+                    $this->Flash->error(__('Extension not allowed, please choose a CSV file.'));
+                } else {
+                    if(move_uploaded_file($this->request->data['file']['tmp_name'],$uploadFile)){
+                        $this->message[]['message']="File has been uploaded";
+                        //_initial_update_asumkr_portal_teacherdata($uploadFile);
+                    }else{
+                        $this->Flash->error(__('Unable to upload file, please try again.'));
+                    }
                 }
             }
             
