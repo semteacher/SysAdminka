@@ -771,15 +771,17 @@ where
      * Get teachers form ASU MKR DataBase (with IPN!)
      * IPN - p7 or p13??
      */
-    private function _get_teachers_asu_mkr(){
+    private function _get_teachers_asu_mkr($ipn){
         $this->teachers_mkr= $this->asu_mkr->gets("
-select 
+SELECT 
     p.p1,
     p.p3,
     p.p4,
     p.p5,
     p.p7
-from p    
+FROM p 
+WHERE
+    p.p7='".$ipn."'   
     ");    
     }
     
@@ -1175,45 +1177,47 @@ var_dump($img);
         $this->message[]['message']= $newportaluser.' new portal users has been created! '.$dbwriteerrors.' DB write errors. '.$missed.' records missed';
     }
 
-    private function _initial_update_asumkr_portal_teacherdata (){
+    private function _initial_update_asumkr_portal_teacherdata ($uploadFile){
         //TODO: load teacher's emails from Excel!!!!!
         //$this->loadModel('Students'); 
         $newportaluser = 0;
         $dbwriteerrors = 0;
+        $multipleinstances = 0;
         $missed = 0;
         //$students_ldb = $this->Students->find('all');
-        foreach($this->teachers_mkr as $teacher_mkr){
-        
-            //TODO: search EXcel for IPN - only if not - create!!!!!
+            //get course data
+            $teachercsv = new SimpleExcel('csv');  // instantiate new object (construct the parser & writer type as CSV)
+            $teachercsv->parser->setDelimiter(";");
+            $teachercsv->parser->loadFile(ROOT.DS."webroot".DS."files/teachers/".DS.$uploadFile);
+            $teacherarr = $teachercsv->parser->getField();             // get complete array of the table
+            $teachercolheaders = $teachercsv->parser->getRow(1);          // get specific array from the specified row (1st row)
             
-            //prepare username and password
-            $asu_mkr_fname = $this->_name_cleanup($teacher_mkr['P4']);
-            $asu_mkr_mname = $this->_name_cleanup($teacher_mkr['P5']);
-            $asu_mkr_lname = $this->_name_cleanup($teacher_mkr['P3']);
-            
-            $name['fname'] = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
-            $name['lname'] = $asu_mkr_lname;
-            // Generate new username
-            $tmpname = explode(" ", $name['fname']);
-            $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
-//var_dump($name);            
-            //check if user has been already registered on portal
-            $this->_get_asu_mkr_portal_user($name['uname'], 0);
-//var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
-            if (is_null($this->asu_mkr_portal_users)){
+        foreach($teacherarr as $row=>$teacherData) {
+            if ($row >0) {
+var_dump($teacherData[2]);
+                $this->_get_teachers_asu_mkr($teacherData[2]); // search teacher by IPN
+                if (!is_null($this->teachers_mkr)){            //create portal users only for teachers who are existing in ASU MKR 
+                    if (count($this->teachers_mkr) > 1){
+                        $multipleinstances++;
+                    } else {
+                        $tmpusername = explode("@", $teacherData[3]);
+                        $teacherDataUsername = $tmpusername[0];
+var_dump($teacherDataUsername);                        
+                        $this->_get_asu_mkr_portal_user($teacherDataUsername, 1);
+                        if (is_null($this->asu_mkr_portal_users)){
 //var_dump($student_ldb);
-                $new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
-                if ($new_id){
+                            $new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
+                            if ($new_id){
 //var_dump($new_id);                
-                    $salt = $this->_asu_portal_generateSalt();
-                    $pass = $this->_asu_portal_setPassword($this->_generate_pass(), $salt);
-                    $u12key = $this->_asu_portal_generateU12();
-                    // SQL to create a new portal user 
-                    $asu_mkr_insert_sql = "INSERT INTO users (u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u12) VALUES(
+                                $salt = $this->_asu_portal_generateSalt();
+                                $pass = $this->_asu_portal_setPassword($this->_generate_pass(), $salt);
+                                $u12key = $this->_asu_portal_generateU12();
+                                // SQL to create a new portal user 
+                                $asu_mkr_insert_sql = "INSERT INTO users (u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u12) VALUES(
                                             ".$new_id.",
-                                            '".$name['uname']."',
+                                            '".$teacherDataUsername."',
                                             '".$pass."',
-                                            '".$name['uname']."@tdmu.edu.ua',
+                                            '".$teacherDataUsername."@tdmu.edu.ua',
                                             1,
                                             '".$teacher_mkr['P1']."',
                                             0,
@@ -1222,19 +1226,22 @@ var_dump($img);
                                             0,
                                             '".$u12key."');";
 //print_r($asu_mkr_insert_sql);
-                    $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
-                    if ($results){
-                        $newportaluser++;
-                    } else {
-                        $dbwriteerrors++;
-                    }
-                }
-            } else { //TODO: debug only
+                                $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
+                                if ($results){
+                                    $newportaluser++;
+                                } else {
+                                    $dbwriteerrors++;
+                                }
+                            }
+                        } else { //TODO: debug only
                 //var_dump($student_ldb->student_id);
-                $missed++;
+                            $missed++;
+                        }                        
+                    } 
+                }
             }
         }
-        $this->message[]['message']= $newportaluser.' new portal users (for Teachers!) has been created! '.$dbwriteerrors.' DB write errors. '.$missed.' records missed';
+        $this->message[]['message']= $newportaluser.' new portal users (for Teachers!) has been created! '.$dbwriteerrors.' DB write errors. '.$missed.' records missed. '.$multipleinstances.' unreasonable duplicates in ASU MKR teachers table';
     }
     
     /*
