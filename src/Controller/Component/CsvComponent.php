@@ -88,7 +88,48 @@ class CsvComponent{
 			return false;
 		}
 	}
+    
+	public function import_simple($filename, $fields = array(), $options = array()) {
+		$options = array_merge($this->defaults, $options);
+		$data = array();
 
+		// open the file
+		if ($file = @fopen($filename, 'r')) {
+			if (empty($fields)) {
+				// read the 1st row as headings
+				$fields = fgetcsv($file, $options['length'], $options['delimiter'], $options['enclosure']);
+			}
+			// Row counter
+			$r = 0;
+			// read each data row in the file
+			while ($row = fgetcsv($file, $options['length'], $options['delimiter'], $options['enclosure'])) {
+				// for each header field
+				foreach ($fields as $f => $field) {
+					// get the data field from Model.field
+					if (strpos($field,'.')) {
+						$keys = explode('.',$field);
+						if (isset($keys[2])) {
+							$data[$r][$keys[0]][$keys[1]][$keys[2]] = $row[$f];
+						} else {
+							$data[$r][$keys[0]][$keys[1]] = $row[$f];
+						}
+					} else {
+						$data[$r][$field] = $row[$f];
+					}
+				}
+				$r++;
+			}
+
+			// close the file
+			fclose($file);
+
+			// return the messages
+			return $data;
+		} else {
+			return false;
+		}
+	}
+    
 	/**
 	 * Converts a data array into
 	 *
