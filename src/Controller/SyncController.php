@@ -2,7 +2,6 @@
 namespace App\Controller;
 use App\Controller\AppController;
 use Cake\Network\Request;
-
 use Cake\Network\Http\Client;;
 
 include_once('Firebird/class_firebird.php');
@@ -19,11 +18,9 @@ use Google_Client;
 use Google_Auth_AssertionCredentials;
 use Google_Service_Directory;
 use Google_Service_Oauth2;
-use Cake\Network\Email\Email;
 use CsvComponent;
-
+use Cake\Network\Email\Email;
 use Cake\Datasource\ConnectionManager;
-
 
 /**
  * Students Controller
@@ -366,8 +363,6 @@ var_dump($this->request->data['file']['name']);
                 $this->message[]['message']=$logs.$output;
             }
 
-//var_dump($this->request);        
-//var_dump($this->request->data['file']);
             if(!empty($this->request->data['file']['name'])){
                 $fileName = $this->request->data['file']['name'];
                 $uploadPath = ROOT.DS."webroot".DS."files/teachers/";
@@ -379,8 +374,8 @@ var_dump($this->request->data['file']['name']);
                     $this->Flash->error(__('Extension not allowed, please choose a CSV file.'));
                 } else {
                     if(move_uploaded_file($this->request->data['file']['tmp_name'],$uploadFile)){
-                        $this->message[]['message']="File has been uploaded";
-                        //_initial_update_asumkr_portal_teacherdata($uploadFile);
+                        //$this->message[]['message']="File has been uploaded";
+                        $this->_initial_update_asumkr_portal_teacherdata($uploadFile);
                     }else{
                         $this->Flash->error(__('Unable to upload file, please try again.'));
                     }
@@ -1178,31 +1173,26 @@ var_dump($img);
     }
 
     private function _initial_update_asumkr_portal_teacherdata ($uploadFile){
-        //TODO: load teacher's emails from Excel!!!!!
-        //$this->loadModel('Students'); 
         $newportaluser = 0;
         $dbwriteerrors = 0;
         $multipleinstances = 0;
         $missed = 0;
-        //$students_ldb = $this->Students->find('all');
-            //get course data
-            $teachercsv = new SimpleExcel('csv');  // instantiate new object (construct the parser & writer type as CSV)
-            $teachercsv->parser->setDelimiter(";");
-            $teachercsv->parser->loadFile(ROOT.DS."webroot".DS."files/teachers/".DS.$uploadFile);
-            $teacherarr = $teachercsv->parser->getField();             // get complete array of the table
-            $teachercolheaders = $teachercsv->parser->getRow(1);          // get specific array from the specified row (1st row)
-            
+        
+        $Csv = new CsvComponent($this->options_csv);
+        $teacherarr = $Csv->import_simple($uploadFile,null,array("delimiter" => ";"));
+//var_dump($teacherarr);
+//var_dump($teacherarr[0]['IPN']);
+//die();            
         foreach($teacherarr as $row=>$teacherData) {
             if ($row >0) {
-var_dump($teacherData[2]);
-                $this->_get_teachers_asu_mkr($teacherData[2]); // search teacher by IPN
+                $this->_get_teachers_asu_mkr($teacherData['IPN']); // search teacher by IPN
                 if (!is_null($this->teachers_mkr)){            //create portal users only for teachers who are existing in ASU MKR 
                     if (count($this->teachers_mkr) > 1){
                         $multipleinstances++;
                     } else {
-                        $tmpusername = explode("@", $teacherData[3]);
+                        $tmpusername = explode("@", $teacherData['EMAIL']);
                         $teacherDataUsername = $tmpusername[0];
-var_dump($teacherDataUsername);                        
+//var_dump($teacherDataUsername);                        
                         $this->_get_asu_mkr_portal_user($teacherDataUsername, 1);
                         if (is_null($this->asu_mkr_portal_users)){
 //var_dump($student_ldb);
@@ -1225,7 +1215,7 @@ var_dump($teacherDataUsername);
                                             '".$salt."',
                                             0,
                                             '".$u12key."');";
-//print_r($asu_mkr_insert_sql);
+//var_dump($asu_mkr_insert_sql);
                                 $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
                                 if ($results){
                                     $newportaluser++;
