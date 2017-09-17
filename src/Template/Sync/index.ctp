@@ -199,10 +199,10 @@
             </div>
             <div class="form-group">
                 <div class="row">
-                    <legend><?= __('Teachers XLS -> ASU MKR Portal users creation') ?></legend>            
+                    <legend><?= __('Teachers CSV -> ASU MKR Portal users creation') ?></legend>            
                 </div>
                 <div class="content">
-                    
+                    <h4 class="">Format: CSV! Encoding: UTF8! Column headers: 'FIO', 'IPN', 'EMAIL'! Delimiter: ";"!</h4>
                     <div class="upload-frm">
                         <?php //echo $this->Form->create($uploadData, ['type' => 'file']); ?>
                         <?php echo $this->Form->input('file', ['type' => 'file', 'class' => 'form-control']); ?>
