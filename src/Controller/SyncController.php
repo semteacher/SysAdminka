@@ -1193,6 +1193,7 @@ var_dump($img);
                         $tmpusername = explode("@", $teacherData['EMAIL']);
                         $teacherDataUsername = $tmpusername[0];
 //var_dump($teacherDataUsername);                        
+//var_dump($this->teachers_mkr[1]);
                         $this->_get_asu_mkr_portal_user($teacherDataUsername, 1);
                         if (is_null($this->asu_mkr_portal_users)){
 //var_dump($student_ldb);
@@ -1209,7 +1210,7 @@ var_dump($img);
                                             '".$pass."',
                                             '".$teacherDataUsername."@tdmu.edu.ua',
                                             1,
-                                            '".$teacher_mkr['P1']."',
+                                            '".$this->teachers_mkr[1]['P1']."',
                                             0,
                                             0,
                                             '".$salt."',
