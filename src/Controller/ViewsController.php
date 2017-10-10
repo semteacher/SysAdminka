@@ -34,12 +34,12 @@ class ViewsController extends AppController
         $this->set('title','Export for Moodle');
         if ($this->request->is('post')) {
             $Csv = new CsvComponent($this->options);
-            $data = $this->Students->find()->where([
+            $data = $this->Students->find()->contain(['Schools', 'Specials'])->where([ //! For loading associations!
                         ' Students.school_id = '.$this->request->data['school_id'].
                         ' AND Students.special_id = '.$this->request->data['special_id'].
                         ' AND grade_level = '.$this->request->data['grade_level'].
                         ' AND status_id = '.$this->request->data['status_id']]);
-            $data= $data->contain(['Schools', 'Specials']); //! For loading associations!
+            //$data= $data->contain(['Schools', 'Specials']); //! For loading associations!
             $data= $data->select([
                 'username'=>'user_name',
                 'password'=>'password',
@@ -62,6 +62,13 @@ class ViewsController extends AppController
                 'profile_field_tsmuspeciality' => 'Specials.name',
                 'profile_field_tsmusemester' => 'grade_level',
                 'profile_field_tsmugroup' => 'groupnum'
+            ])->contain([           //! For loading associations!
+                'Schools' => [
+                    'fields' => ['Schools.name']
+                ],
+                'Specials' => [
+                    'fields' => ['Specials.name']
+                ]                
             ]);
             $data =json_decode(json_encode($data), true);
             if (count($data)>0){
