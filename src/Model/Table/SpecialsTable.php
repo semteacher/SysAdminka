@@ -51,7 +51,10 @@ class SpecialsTable extends Table
             ->requirePresence('name', 'create')
             ->notEmpty('name')
             ->requirePresence('code', 'create')
-            ->notEmpty('code');
+            ->notEmpty('code')
+            ->allowEmpty('cont_id', 'create')
+            ->allowEmpty('pnsp_id', 'create')
+            ->allowEmpty('sp_id', 'create');
 
         return $validator;
     }

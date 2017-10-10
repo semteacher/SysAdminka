@@ -10,6 +10,16 @@
         <?php
             echo $this->Form->input('name',['class'=>'form-control']);
         ?>
+        <fieldset <?= $disabled ?>>
+            <?php
+                echo $this->Form->input('cont_id',['class'=>'form-control','type'=>'text']);
+            ?>
+        </fieldset>
+        <fieldset
+            <?php
+                echo $this->Form->input('f_id',['class'=>'form-control','type'=>'text']);
+            ?>
+        </fieldset>
     </fieldset>
     <br/>
     <?= $this->Form->button(__('Save'),['class'=>'btn btn-success']) ?>

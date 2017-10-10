@@ -36,6 +36,10 @@ class CsvComponent{
 		return iconv("UTF-8","WINDOWS-1257", html_entity_decode($str, ENT_COMPAT, 'utf-8'));
 //		return $str;
 	}
+    
+	protected function _encode_simple($str = '') {
+		return html_entity_decode($str, ENT_COMPAT, 'utf-8');
+	}    
 
 	/**
 	 * Import public function
@@ -84,7 +88,48 @@ class CsvComponent{
 			return false;
 		}
 	}
+    
+	public function import_simple($filename, $fields = array(), $options = array()) {
+		$options = array_merge($this->defaults, $options);
+		$data = array();
 
+		// open the file
+		if ($file = @fopen($filename, 'r')) {
+			if (empty($fields)) {
+				// read the 1st row as headings
+				$fields = fgetcsv($file, $options['length'], $options['delimiter'], $options['enclosure']);
+			}
+			// Row counter
+			$r = 0;
+			// read each data row in the file
+			while ($row = fgetcsv($file, $options['length'], $options['delimiter'], $options['enclosure'])) {
+				// for each header field
+				foreach ($fields as $f => $field) {
+					// get the data field from Model.field
+					if (strpos($field,'.')) {
+						$keys = explode('.',$field);
+						if (isset($keys[2])) {
+							$data[$r][$keys[0]][$keys[1]][$keys[2]] = $row[$f];
+						} else {
+							$data[$r][$keys[0]][$keys[1]] = $row[$f];
+						}
+					} else {
+						$data[$r][$field] = $row[$f];
+					}
+				}
+				$r++;
+			}
+
+			// close the file
+			fclose($file);
+
+			// return the messages
+			return $data;
+		} else {
+			return false;
+		}
+	}
+    
 	/**
 	 * Converts a data array into
 	 *
@@ -100,7 +145,7 @@ class CsvComponent{
 		if ($file = @fopen($filename, 'w')) {
 			// Iterate through and format data
 			$firstRecord = true;
-			foreach ($data as $record) {
+			foreach ($data as $record) {           
 				$row = array();
 				foreach ($record as $model => $fields) {
 					// TODO add parsing for HABTM
@@ -136,6 +181,53 @@ class CsvComponent{
 			return false;
 		}
 	}
+
+	public function export_simple($filename, $data, $options = array()) {
+		$options = array_merge($this->defaults, $options);
+
+		// open the file
+		if ($file = @fopen($filename, 'w')) {
+			// Iterate through and format data
+			$firstRecord = true;
+			foreach ($data as $record) {
+				$row = array();
+				//foreach ($record as $model => $fields) {
+					// TODO add parsing for HABTM
+					foreach ($record as $field => $value) {
+						if (!is_array($value)) {
+							if ($firstRecord) {
+								//$headers[] = $this->_encode($field);
+                                $headers[] = $this->_encode_simple($field);
+							}
+							//$row[] = $this->_encode($value);
+                            $row[] = $this->_encode_simple($value);
+						} // TODO due to HABTM potentially being huge, creating an else might not be plausible
+					}
+				//}
+				$rows[] = $row;
+				$firstRecord = false;
+			}
+
+			if ($options['headers']) {
+				// write the 1st row as headings
+				fputcsv($file, $headers, $options['delimiter'], $options['enclosure']);
+			}
+			// Row counter
+			$r = 0;
+			foreach ($rows as $row) {
+				fputcsv($file, $row, $options['delimiter'], $options['enclosure']);
+				$r++;
+			}
+
+			// close the file
+			fclose($file);
+
+			return $r;
+		} else {
+			return false;
+		}
+	}
+    
     public function setup(Model $model, $config = array()) {
         $this->settings[$model->alias] = array_merge($this->defaults, $config);
     }

@@ -10,7 +10,7 @@
 <!--        <div class="col-sm-6 col-md-6 col-xs-6">-->
 <!--            <div class="row">-->
 <!--                <div class="col-sm-10 col-md-6 col-xs-9">-->
-<!--                    --><?//= $this->Form->input('',['class'=>'form-control search_sort','type'=>'text','label' => false,'value'=>$search]); ?>
+<!--                    --><?php // $this->Form->input('',['class'=>'form-control search_sort','type'=>'text','label' => false,'value'=>$search]); ?>
 <!--                </div>-->
 <!--                <div class="col-sm-1 col-md-1 col-xs-1">-->
 <!--                    <button class="btn btn-default" type="button" onClick='window.location.href = "/students/index/"+$(".change_sort").val()+"/"+$(".search_sort").val()'><i class="fa fa-search"></i></button>-->
@@ -32,11 +32,11 @@
         >
         <thead>
         <tr>
-            <th style="max-width:120px" data-filterable="text" class='col-xs-2 hidden-xs hidden-sm' data-sortable="true">Department</th>
-            <th style="max-width:120px" data-filterable="text" class='col-xs-2 hidden-xs hidden-sm' data-sortable="true" data-sort-order="2">Special</th>
-            <th style="max-width:10px" class='col-xs-1 hidden-xs hidden-sm' data-filterable="select" data-sortable="true" data-sort-order="2">Sem</th>
-            <th style="max-width:120px" class='hidden-xs hidden-sm' data-filterable="text" data-sortable="true" data-sort-order="2">Student_id</th>
-            <th style="max-width:10px" class='col-xs-1 hidden-xs hidden-sm' data-filterable="select" data-sortable="true" data-sort-order="2">Group</th>
+            <th style="max-width:120px" class="col-xs-2 hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">Department</th>
+            <th style="max-width:120px" class="col-xs-2 hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">Special</th>
+            <th style="max-width:20px" class="col-xs-1 hidden-xs hidden-sm" data-filterable="select" data-sortable="true" data-sort-order="2">Sem</th>
+            <th style="max-width:120px" class="hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">Student_id</th>
+            <th style="max-width:20px" class="col-xs-1 hidden-xs hidden-sm" data-filterable="select" data-sortable="true" data-sort-order="2">Group</th>
             <th style="max-width:50px" data-filterable="text" data-sortable="true" data-sort-order="2">First_name</th>
             <th style="max-width:50px" data-filterable="text" data-sortable="true" data-sort-order="2">Last_name</th>
             <th style="max-width:50px" data-filterable="text" data-sortable="true" data-sort-order="2">User_name</th>
