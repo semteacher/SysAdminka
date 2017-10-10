@@ -10,7 +10,7 @@
 <!--        <div class="col-sm-6 col-md-6 col-xs-6">-->
 <!--            <div class="row">-->
 <!--                <div class="col-sm-10 col-md-6 col-xs-9">-->
-<!--                    --><?php // $this->Form->input('',['class'=>'form-control search_sort','type'=>'text','label' => false,'value'=>$search]); ?>
+<!--                    --><?//= $this->Form->input('',['class'=>'form-control search_sort','type'=>'text','label' => false,'value'=>$search]); ?>
 <!--                </div>-->
 <!--                <div class="col-sm-1 col-md-1 col-xs-1">-->
 <!--                    <button class="btn btn-default" type="button" onClick='window.location.href = "/students/index/"+$(".change_sort").val()+"/"+$(".search_sort").val()'><i class="fa fa-search"></i></button>-->
