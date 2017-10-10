@@ -28,8 +28,6 @@ class ViewsController extends AppController
             'headers' => true,
             'text' => false,
         ];
-
-
     }
 
     public function moodle(){
@@ -37,11 +35,11 @@ class ViewsController extends AppController
         if ($this->request->is('post')) {
             $Csv = new CsvComponent($this->options);
             $data = $this->Students->find()->where([
-                        ' school_id = '.$this->request->data['school_id'].
-                        ' AND special_id = '.$this->request->data['special_id'].
+                        ' Students.school_id = '.$this->request->data['school_id'].
+                        ' AND Students.special_id = '.$this->request->data['special_id'].
                         ' AND grade_level = '.$this->request->data['grade_level'].
                         ' AND status_id = '.$this->request->data['status_id']]);
-
+            $data= $data->contain(['Schools', 'Specials']); //! For loading associations!
             $data= $data->select([
                 'username'=>'user_name',
                 'password'=>'password',
@@ -59,8 +57,11 @@ class ViewsController extends AppController
                     ' Semester'
                 ]),
                 'idnumber' => 'student_id',
-                'auth' => $data->func()->concat(['googleoauth2'])
-
+                'auth' => $data->func()->concat(['googleoauth2']),
+                'profile_field_tsmufaculty' => 'Schools.name',
+                'profile_field_tsmuspeciality' => 'Specials.name',
+                'profile_field_tsmusemester' => 'grade_level',
+                'profile_field_tsmugroup' => 'groupnum'
             ]);
             $data =json_decode(json_encode($data), true);
             if (count($data)>0){
