@@ -1079,6 +1079,17 @@ var_dump($img);
          $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
+            
+            //First check - is it kontingent ID existing
+          if (strlen($student_of_asu_mkr['ST108'])>1) {  
+            $students_ldb = $this->Students->find('all')
+                ->where(['student_id' => $student_of_asu_mkr['ST108']])
+                ->where(['status_id' => 1]);
+            if (isset($students_ldb)){
+//var_dump($student_ldb->student_id);
+                $singleinstance++;               
+            }
+          } else {
             // clean-up names - LDB has cleaned values!
             //if ($student_of_asu_mkr['F1']<>5){ //ukrainians
             if ($student_of_asu_mkr['ST32']==804){ //ukrainians
@@ -1133,6 +1144,7 @@ var_dump($img);
                     }
                 }
             }
+          }
         }
 
         $Csv = new CsvComponent($this->options_csv);
