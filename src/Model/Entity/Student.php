@@ -28,6 +28,10 @@ class Student extends Entity
         'school' => true,
         'students' => true,
         'rosters' => true,
-        'send_photo_google'=> true
+        'send_photo_google'=> true,
+        'c_stud_id'=> true,
+        'c_sprec_id'=> true,
+        'asumkr_id'=> true,
+        'f_id'=> true
     ];
 }

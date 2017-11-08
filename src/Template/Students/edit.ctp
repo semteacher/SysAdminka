@@ -14,7 +14,14 @@
             echo $this->Form->input('user_name',['class'=>'form-control','type'=>'text','data-toggle'=>'tooltip','data-placement'=>'top','title'=>'If you editing this user name, it record will current delete on the google']);
             echo $this->Form->input('password',['class'=>'form-control','type'=>'text']);
             echo $this->Form->input('status_id',['options' => $status,'class'=>'form-control']);
+            echo $this->Form->input('asumkr_id',['class'=>'form-control','type'=>'text']); 
         ?>
+        <fieldset disabled>
+        <?php
+			echo $this->Form->input('c_stud_id',['class'=>'form-control','type'=>'text']);
+			echo $this->Form->input('c_sprec_id',['class'=>'form-control','type'=>'text']);
+        ?>
+        </fieldset>
     </fieldset>
     <br/>
     <?= $this->Form->button(__('Save'),['class'=>'btn btn-success']) ?>
