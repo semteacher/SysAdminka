@@ -1088,89 +1088,84 @@ var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
             //First check - is it kontingent ID existing
-          if (strlen($student_of_asu_mkr['ST108'])>1) {
-            unset($student_ldb);
-            $student_ldb = $this->Students->find()
-                ->where(['student_id' => $student_of_asu_mkr['ST108'], 'status_id' => 1])
-                ->first();
-//var_dump($student_ldb);
-//var_dump("STEP1-found-gaps-by-contid0=".$student_ldb->student_id);
-            if (isset($students_ldb)){
-var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
-                $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id."\r\n";
-                $singleinstance++;
-                $contidinasu++;
-            }
-          } else {
-            // clean-up names - LDB has cleaned values!
-            //if ($student_of_asu_mkr['F1']<>5){ //ukrainians
-            if ($student_of_asu_mkr['ST32']==804){ //ukrainians
-                $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
-                $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
-                $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
-            } else {                            //foreign
-                $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST75']);
-                $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST76']);
-                $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST74']);            
-            }
-            
-            $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
-var_dump('STEP2-search by ASU names='.$asu_mkr_search_lname.' '.$asu_mkr_search_fname);
-            $txtreport .= "STEP2-search by ASU names=".$asu_mkr_search_lname." ".$asu_mkr_search_fname."\r\n";
-            $found_pos=array();
-            $found_pos2=array();
-
-            // Recommended update LDB first - to remove duplication of spaces and trailing spaces....
-            unset($students_ldb);
-            $students_ldb = $this->Students->find('all')
-                ->where(['first_name' => $asu_mkr_search_fname])
-                ->where(['last_name' => $asu_mkr_lname]);
-
-            if (isset($students_ldb)){
+            if (strlen($student_of_asu_mkr['ST108'])>1) {
                 unset($student_ldb);
-                foreach($students_ldb as $student_ldb){
-                    $found_pos[$student_ldb->id] = $student_ldb->student_id;
-                    $found_pos2[$student_ldb->id] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name, 'statusID'=>$student_ldb->status_id);
-                }
-//var_dump($found_pos);
-//var_dump($found_pos2);
-                if (count($found_pos)==0) { // NOT FOUND!
-                    $notfound++;
-                    $notfound_pos[] = $student_of_asu_mkr;
-                    $txtreport .= "RESULT - NOT FOUND!\r\n";
-                } elseif(count($found_pos)==1) { // found - SINGLE OCCYURENCE - OK!
+                $student_ldb = $this->Students->find()
+                    ->where(['student_id' => $student_of_asu_mkr['ST108'], 'status_id' => 1])
+                    ->first();
+                if (isset($students_ldb)){
+var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
+                    $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id."\r\n";
                     $singleinstance++;
-                    $found_keys = array_keys($found_pos);
-                    $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
-var_dump("RESULT -found-by-name: ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']);
-                    $txtreport .= "RESULT -found-by-name(single): ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']."\r\n";
-                    //UPDATE ASU MKR DATABASE:
-                    $results = $this->asu_mkr->sets($asu_mkr_update_sql);
-                } else { // found - MULTIPLE OCCYURENCES
-                    $multipleinstances++;
-                    $found_multiple = array_merge($found_multiple,$found_pos2);
-                    //update ASU MRR DB for only active student's
-                    foreach ($found_pos2 as $student2resolve) {
-                        if ($student2resolve['statusID'] == 1){
-                            $multipleresolved++;
-                            $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
-                            $results = $this->asu_mkr->sets($asu_mkr_update_sql);
-                            $txtreport .= "RESULT -found-by-name(from multiple): ContID=".$student2resolve['contID'].", Name=".$student2resolve['LName']." ".$student2resolve['FName']."\r\n";
-//var_dump($student2resolve);                            
+                    $contidinasu++;
+                }
+            } else {
+                // clean-up names - LDB has cleaned values!
+                if ($student_of_asu_mkr['ST32']==804){ //ukrainians
+                    $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
+                    $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
+                    $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
+                } else {                            //foreign
+                    $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST75']);
+                    $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST76']);
+                    $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST74']);            
+                }
+            
+                $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
+                $txtreport .= "STEP2-search by ASU names=".$asu_mkr_search_lname." ".$asu_mkr_search_fname."\r\n";
+                $found_pos=array();
+                $found_pos2=array();
+
+                // Recommended update LDB first - to remove duplication of spaces and trailing spaces....
+                unset($students_ldb);
+                $students_ldb = $this->Students->find('all')
+                    ->where(['first_name' => $asu_mkr_search_fname])
+                    ->where(['last_name' => $asu_mkr_lname]);
+
+                if (isset($students_ldb)){
+                    unset($student_ldb);
+                    foreach($students_ldb as $student_ldb){
+                        $found_pos[$student_ldb->id] = $student_ldb->student_id;
+                        $found_pos2[$student_ldb->id] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name, 'statusID'=>$student_ldb->status_id);
+                    }
+                    if (count($found_pos)==0) { // NOT FOUND!
+                        $notfound++;
+                        $notfound_pos[] = $student_of_asu_mkr;
+                        $txtreport .= "RESULT - NOT FOUND!\r\n";
+                    } elseif(count($found_pos)==1) { // found - SINGLE OCCYURENCE - OK!
+                        $singleinstance++;
+                        $found_keys = array_keys($found_pos);
+                        $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                        $txtreport .= "RESULT -found-by-name(single): ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']."\r\n";
+                        //UPDATE ASU MKR DATABASE:
+                        $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                    } else { // found - MULTIPLE OCCYURENCES
+                        $multipleinstances++;
+                        $found_multiple = array_merge($found_multiple,$found_pos2);
+                        //update ASU MRR DB for only active student's
+                        foreach ($found_pos2 as $student2resolve) {
+                            if ($student2resolve['statusID'] == 1){
+                                $multipleresolved++;
+                                $txtreport .= "RESULT -found-by-name(from multiple): ContID=".$student2resolve['contID'].", Name=".$student2resolve['LName']." ".$student2resolve['FName']."\r\n";
+                                //UPDATE ASU MKR DATABASE:
+                                $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                                $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                            }
                         }
                     }
                 }
             }
-          }
         }
 
-        $Csv = new CsvComponent($this->options_csv);
-        $Csv->export_simple(ROOT.DS."webroot".DS."files".DS."notfound.csv", $notfound_pos);
-        $Csv->export_simple(ROOT.DS."webroot".DS."files".DS."duplicate.csv", $found_multiple);
+        //prepare total repor message
         $totalresultmessage = 'Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.')  Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;
         $this->message[]['message']= $totalresultmessage;
         $txtreport .= "\r\n".$totalresultmessage;
+        //save all report files
         file_put_contents (ROOT.DS."webroot".DS."files".DS."report.txt", $txtreport);
+        $Csv = new CsvComponent($this->options_csv);
+        $Csv->export_simple(ROOT.DS."webroot".DS."files".DS."notfound.csv", $notfound_pos);
+        $Csv->export_simple(ROOT.DS."webroot".DS."files".DS."duplicate.csv", $found_multiple);
     }
     
     private function _initial_update_asumkr_portal_userdata (){
