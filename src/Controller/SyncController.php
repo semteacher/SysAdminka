@@ -1072,22 +1072,28 @@ var_dump($img);
 
         $notfound = 0;
         $singleinstance = 0;
+        $contidinasu = 0;
         $multipleinstances = 0;
         $multipleresolved = 0;
         
-         $notfound_pos = array();
-         $found_multiple = array();
+        $notfound_pos = array();
+        $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
-            
+var_dump("START-asu_last_name=".$student_of_asu_mkr['ST2']);
+var_dump("asu_contID=".$student_of_asu_mkr['ST108']);
             //First check - is it kontingent ID existing
-          if (strlen($student_of_asu_mkr['ST108'])>1) {  
-            $students_ldb = $this->Students->find('all')
-                ->where(['student_id' => $student_of_asu_mkr['ST108']])
-                ->where(['status_id' => 1]);
+          if (strlen($student_of_asu_mkr['ST108'])>1) {
+            unset($student_ldb);
+            $student_ldb = $this->Students->find()
+                ->where(['student_id' => $student_of_asu_mkr['ST108'], 'status_id' => 1])
+                ->first();
+//var_dump($student_ldb);
+var_dump("STEP1-found-gaps-by-contid1=".$student_ldb->student_id);
             if (isset($students_ldb)){
-//var_dump($student_ldb->student_id);
-                $singleinstance++;               
+var_dump("found-gaps-by-contid2(isset)=".$student_ldb->student_id);
+                $singleinstance++;
+                $contidinasu++;
             }
           } else {
             // clean-up names - LDB has cleaned values!
@@ -1103,21 +1109,24 @@ var_dump($img);
             }
             
             $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
-//var_dump($asu_mkr_search_fname);            
+var_dump('STEP2-search by ASU names='.$asu_mkr_search_lname.' '.$asu_mkr_search_fname);
             $found_pos=array();
             $found_pos2=array();
 
             // Recommended update LDB first - to remove duplication of spaces and trailing spaces....
+            unset($students_ldb);
             $students_ldb = $this->Students->find('all')
                 ->where(['first_name' => $asu_mkr_search_fname])
                 ->where(['last_name' => $asu_mkr_lname]);
 
             if (isset($students_ldb)){
+                unset($student_ldb);
                 foreach($students_ldb as $student_ldb){
                     $found_pos[$student_ldb->id] = $student_ldb->student_id;
-                    $found_pos2[] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name, 'statusID'=>$student_ldb->status_id);
+                    $found_pos2[$student_ldb->id] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name, 'statusID'=>$student_ldb->status_id);
                 }
-                
+//var_dump($found_pos);
+//var_dump($found_pos2);
                 if (count($found_pos)==0) { // NOT FOUND!
                     $notfound++;
                     $notfound_pos[] = $student_of_asu_mkr;
@@ -1125,7 +1134,7 @@ var_dump($img);
                     $singleinstance++;
                     $found_keys = array_keys($found_pos);
                     $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
-//var_dump($found_pos[$found_keys[0]]);                    
+var_dump("found-by-name: ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']);
                     // TODO: problem with st149 (int not enought) and sql dialect (1 not support bigint)
                     //$asu_mkr_update_sql = "UPDATE ST SET ST.ST200='".$found_pos[$found_keys[0]]."' WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                     //UPDATE ASU MKR DATABASE:
@@ -1150,7 +1159,7 @@ var_dump($img);
         $Csv = new CsvComponent($this->options_csv);
         $Csv->export_simple(ROOT.DS."webroot".DS."files/notfound.csv", $notfound_pos);
         $Csv->export_simple(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple);
-        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;          
+        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.')  Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;          
     }
     
     private function _initial_update_asumkr_portal_userdata (){
