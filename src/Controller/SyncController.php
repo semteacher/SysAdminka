@@ -1075,13 +1075,18 @@ var_dump($img);
         $contidinasu = 0;
         $multipleinstances = 0;
         $multipleresolved = 0;
+        $txtreport = '';
         
         $notfound_pos = array();
         $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
 var_dump("START-asu_last_name=".$student_of_asu_mkr['ST2']);
-var_dump("asu_contID=".$student_of_asu_mkr['ST108']);
+var_dump("asu_ID=".$student_of_asu_mkr['ST1']);
+var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
+            $txtreport .= "START-asu_last_name=".$student_of_asu_mkr['ST2']."\r\n";
+            $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
+            $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
             //First check - is it kontingent ID existing
           if (strlen($student_of_asu_mkr['ST108'])>1) {
             unset($student_ldb);
@@ -1089,9 +1094,10 @@ var_dump("asu_contID=".$student_of_asu_mkr['ST108']);
                 ->where(['student_id' => $student_of_asu_mkr['ST108'], 'status_id' => 1])
                 ->first();
 //var_dump($student_ldb);
-var_dump("STEP1-found-gaps-by-contid1=".$student_ldb->student_id);
+//var_dump("STEP1-found-gaps-by-contid0=".$student_ldb->student_id);
             if (isset($students_ldb)){
-var_dump("found-gaps-by-contid2(isset)=".$student_ldb->student_id);
+var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
+                $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id."\r\n";
                 $singleinstance++;
                 $contidinasu++;
             }
@@ -1110,6 +1116,7 @@ var_dump("found-gaps-by-contid2(isset)=".$student_ldb->student_id);
             
             $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
 var_dump('STEP2-search by ASU names='.$asu_mkr_search_lname.' '.$asu_mkr_search_fname);
+            $txtreport .= "STEP2-search by ASU names=".$asu_mkr_search_lname." ".$asu_mkr_search_fname."\r\n";
             $found_pos=array();
             $found_pos2=array();
 
@@ -1130,13 +1137,13 @@ var_dump('STEP2-search by ASU names='.$asu_mkr_search_lname.' '.$asu_mkr_search_
                 if (count($found_pos)==0) { // NOT FOUND!
                     $notfound++;
                     $notfound_pos[] = $student_of_asu_mkr;
+                    $txtreport .= "RESULT - NOT FOUND!\r\n";
                 } elseif(count($found_pos)==1) { // found - SINGLE OCCYURENCE - OK!
                     $singleinstance++;
                     $found_keys = array_keys($found_pos);
                     $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
-var_dump("found-by-name: ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']);
-                    // TODO: problem with st149 (int not enought) and sql dialect (1 not support bigint)
-                    //$asu_mkr_update_sql = "UPDATE ST SET ST.ST200='".$found_pos[$found_keys[0]]."' WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+var_dump("RESULT -found-by-name: ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']);
+                    $txtreport .= "RESULT -found-by-name(single): ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']."\r\n";
                     //UPDATE ASU MKR DATABASE:
                     $results = $this->asu_mkr->sets($asu_mkr_update_sql);
                 } else { // found - MULTIPLE OCCYURENCES
@@ -1148,6 +1155,7 @@ var_dump("found-by-name: ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$fo
                             $multipleresolved++;
                             $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                             $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                            $txtreport .= "RESULT -found-by-name(from multiple): ContID=".$student2resolve['contID'].", Name=".$student2resolve['LName']." ".$student2resolve['FName']."\r\n";
 //var_dump($student2resolve);                            
                         }
                     }
@@ -1157,9 +1165,12 @@ var_dump("found-by-name: ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$fo
         }
 
         $Csv = new CsvComponent($this->options_csv);
-        $Csv->export_simple(ROOT.DS."webroot".DS."files/notfound.csv", $notfound_pos);
-        $Csv->export_simple(ROOT.DS."webroot".DS."files/duplicate.csv", $found_multiple);
-        $this->message[]['message']='Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.')  Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;          
+        $Csv->export_simple(ROOT.DS."webroot".DS."files".DS."notfound.csv", $notfound_pos);
+        $Csv->export_simple(ROOT.DS."webroot".DS."files".DS."duplicate.csv", $found_multiple);
+        $totalresultmessage = 'Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.')  Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;
+        $this->message[]['message']= $totalresultmessage;
+        $txtreport .= "\r\n".$totalresultmessage;
+        file_put_contents (ROOT.DS."webroot".DS."files".DS."report.txt", $txtreport);
     }
     
     private function _initial_update_asumkr_portal_userdata (){
