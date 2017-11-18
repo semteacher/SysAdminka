@@ -868,7 +868,7 @@ WHERE
             $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
 //var_dump($name);
             // search Local Database for an existing user:
-            if ($student_of_asu_mkr['ST108']<>''){      // get existing user by Contingent ID
+            if (strlen($student_of_asu_mkr['ST108'])>1){      // get existing user by Contingent ID
                 //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 $student_ldb = $this->Students->find()
                     ->where(['student_id' => $student_of_asu_mkr['ST108']])
@@ -1058,7 +1058,8 @@ var_dump($img);
             UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
             `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`); 
-               UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`; 
+               UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`;
+               UPDATE `students` SET `students`.`c_stud_id` = `students`.`student_id`;               
                UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
         $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($updatespeciality_sql);
@@ -1124,7 +1125,7 @@ var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
                 }
             
                 $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
-                $txtreport .= "STEP2-search by ASU names=".$asu_mkr_search_lname." ".$asu_mkr_search_fname."\r\n";
+                $txtreport .= "STEP2-search by ASU names=".$asu_mkr_lname." ".$asu_mkr_search_fname."\r\n";
                 $found_pos=array();
                 $found_pos2=array();
 
