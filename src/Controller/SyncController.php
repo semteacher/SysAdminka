@@ -1072,6 +1072,7 @@ var_dump($img);
 
         $notfound = 0;
         $singleinstance = 0;
+        $asuidingaps = 0;
         $contidinasu = 0;
         $multipleinstances = 0;
         $multipleresolved = 0;
@@ -1087,13 +1088,24 @@ var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
             $txtreport .= "START-asu_last_name=".$student_of_asu_mkr['ST2']."\r\n";
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
-            //First check - is it kontingent ID existing
-            if (strlen($student_of_asu_mkr['ST108'])>1) {
+            //ZERO check - against manually entered ASU MKR IDs:
+            unset($student_ldb);
+                $student_ldb = $this->Students->find()
+                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1'], 'status_id' => 1])
+                    ->first();
+            if (isset($student_ldb)){
+var_dump("RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id);
+                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id."\r\n";
+                    $singleinstance++;
+                    $asuidingaps++;
+            } elseif (strlen($student_of_asu_mkr['ST108'])>1) {
+            //if (strlen($student_of_asu_mkr['ST108'])>1) {
+                //First check - is it kontingent ID existing
                 unset($student_ldb);
                 $student_ldb = $this->Students->find()
                     ->where(['student_id' => $student_of_asu_mkr['ST108'], 'status_id' => 1])
                     ->first();
-                if (isset($students_ldb)){
+                if (isset($student_ldb)){
 var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
                     $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id."\r\n";
                     $singleinstance++;
@@ -1158,7 +1170,7 @@ var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
         }
 
         //prepare total repor message
-        $totalresultmessage = 'Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.')  Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;
+        $totalresultmessage = 'Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.', ASUIDinGAPS= '.$asuidingaps.') Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;
         $this->message[]['message']= $totalresultmessage;
         $txtreport .= "\r\n".$totalresultmessage;
         //save all report files
