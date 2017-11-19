@@ -867,7 +867,9 @@ WHERE
             $tmpname = explode(" ", $name['fname']);
             $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
 //var_dump($name);
+
             // search Local Database for an existing user:
+            unset($student_ldb);
             if (strlen($student_of_asu_mkr['ST108'])>1){      // get existing user by Contingent ID
                 //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 $student_ldb = $this->Students->find()
@@ -938,6 +940,7 @@ WHERE
                     
                     if (($student_of_asu_mkr['std11']==2||$student_of_asu_mkr['std11']==4)&&($student_ldb->status_id==1)){
                         $data['status_id'] = 10;  //Move student TO archive:
+                        $this->options['archive_student']++;
                     } elseif ($student_ldb->status_id==10&&$student_of_asu_mkr['std11']==0) {
                         $data['status_id'] = 1;    //Get student FROM archive:
                     }
@@ -950,7 +953,7 @@ WHERE
                                 $this->status=true;
                             }
                     }
-                }else{
+                } else {
                     //add a new one student
                     $data = $this->Students->newEntity();
                     $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
@@ -972,7 +975,7 @@ WHERE
                     $data['user_name'] = $name['uname'];
                     $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
                     $data['password'] = $this->_generate_pass();
-                    if ($student_of_asu_mkr['ST108']<>''){   //should be newer executed but for compatibility
+                    if (strlen($student_of_asu_mkr['ST108'])>1){   //should be newer executed but for compatibility
                         $data['student_id'] = $student_of_asu_mkr['ST108'];  //for gsync
                     } else {
                         $data['student_id'] = $student_of_asu_mkr['ST1'];    //for gsync
@@ -996,6 +999,27 @@ WHERE
                         $this->options['new_student_failed']++;
 //var_dump("NEW-failed=".$data['asumkr_id']);
                     }
+                }
+            } else {
+                if (isset($student_ldb)){
+                    $rename=0;
+                    $data = $this->Students->get($student_ldb->id);
+                    if (($student_of_asu_mkr['std11']==2||$student_of_asu_mkr['std11']==4) && $student_ldb->status_id!=10){
+                        $rename++;
+                        $data['status_id'] = 10;
+                        $this->options['archive_student']++;
+                    }else if (($student_of_asu_mkr['std11']<>2||$student_of_asu_mkr['std11']<>4) && $student_ldb->status_id==10){
+                        $rename++;
+                        $data['status_id'] = 1;
+                    }
+
+                    if($rename>0){
+                        if ($this->Students->save($data)) {
+                            $this->options['rename_student']++;
+                            $this->status=true;
+//                           $this->message[]['message']='Editing students: '.$this->options['rename_student'];
+                        }
+                    }                
                 }
             }
         }
