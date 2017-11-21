@@ -442,6 +442,9 @@ var_dump($this->request->data['file']['name']);
     public function api(){
         $this->_get_students();
         $this->_sync_C_with_LDB_users();
+        //TODO: replacement for ASU MKR:
+        //$this->_get_students_asu_mkr();
+        //$this->_sync_ASU_with_LDB_users();
         if ($this->status==true){
             $this->loadModel('Synchronized');
             $data = $this->Synchronized->newEntity();
