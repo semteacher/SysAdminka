@@ -1119,27 +1119,31 @@ var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
             //ZERO check - against manually entered ASU MKR IDs:
-            unset($student_ldb);
-                $student_ldb = $this->Students->find()
-                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1'], 'status_id' => 1])
-                    ->first();
-            if (isset($student_ldb)){
+            unset($students_ldb);
+                $students_ldb = $this->Students->find('all')
+                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']]);
+            if (isset($students_ldb)){
+                unset($student_ldb);
+                foreach($students_ldb as $student_ldb){
 var_dump("RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id);
-                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id."\r\n";
+                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id.", status=".$student_ldb->status_id."\r\n";
                     $singleinstance++;
                     $asuidingaps++;
+                }
             } elseif (strlen($student_of_asu_mkr['ST108'])>1) {
             //if (strlen($student_of_asu_mkr['ST108'])>1) {
                 //First check - is it kontingent ID existing
-                unset($student_ldb);
-                $student_ldb = $this->Students->find()
-                    ->where(['student_id' => $student_of_asu_mkr['ST108'], 'status_id' => 1])
-                    ->first();
-                if (isset($student_ldb)){
+                unset($students_ldb);
+                $students_ldb = $this->Students->find('all')
+                    ->where(['student_id' => $student_of_asu_mkr['ST108']]);
+                if (isset($students_ldb)){
+                    unset($student_ldb);
+                    foreach($students_ldb as $student_ldb){
 var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
-                    $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id."\r\n";
-                    $singleinstance++;
-                    $contidinasu++;
+                        $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id.", status=".$student_ldb->status_id."\r\n";
+                        $singleinstance++;
+                        $contidinasu++;
+                    }
                 }
             } else {
                 // clean-up names - LDB has cleaned values!
