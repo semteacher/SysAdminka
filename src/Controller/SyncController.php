@@ -1120,9 +1120,10 @@ var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
             //ZERO check - against manually entered ASU MKR IDs:
             unset($students_ldb);
-                $students_ldb = $this->Students->find('all')
+                $students_ldb = $this->Students->find()
                     ->where(['asumkr_id' => $student_of_asu_mkr['ST1']]);
-            if (isset($students_ldb)){
+            if (isset($students_ldb)&&($students_ldb->count()>0)){
+var_dump($students_ldb->count());                
                 unset($student_ldb);
                 foreach($students_ldb as $student_ldb){
 var_dump("RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id);
@@ -1134,9 +1135,10 @@ var_dump("RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id);
             //if (strlen($student_of_asu_mkr['ST108'])>1) {
                 //First check - is it kontingent ID existing
                 unset($students_ldb);
-                $students_ldb = $this->Students->find('all')
+                $students_ldb = $this->Students->find()
                     ->where(['student_id' => $student_of_asu_mkr['ST108']]);
-                if (isset($students_ldb)){
+                if (isset($students_ldb)&&($students_ldb->count()>0)){
+var_dump($students_ldb->count());                    
                     unset($student_ldb);
                     foreach($students_ldb as $student_ldb){
 var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
@@ -1169,6 +1171,7 @@ var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
                     ->where(['last_name' => $asu_mkr_lname]);
 
                 if (isset($students_ldb)){
+                  if ($students_ldb->count()>0){
                     unset($student_ldb);
                     foreach($students_ldb as $student_ldb){
                         $found_pos[$student_ldb->id] = $student_ldb->student_id;
@@ -1199,6 +1202,11 @@ var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
                             }
                         }
                     }
+                  } else {
+                        $notfound++;
+                        $notfound_pos[] = $student_of_asu_mkr;
+                        $txtreport .= "RESULT - NOT FOUND!\r\n";                      
+                  } 
                 }
             }
         }
