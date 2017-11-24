@@ -442,6 +442,9 @@ var_dump($this->request->data['file']['name']);
     public function api(){
         $this->_get_students();
         $this->_sync_C_with_LDB_users();
+        //TODO: replacement for ASU MKR:
+        //$this->_get_students_asu_mkr();
+        //$this->_sync_ASU_with_LDB_users();
         if ($this->status==true){
             $this->loadModel('Synchronized');
             $data = $this->Synchronized->newEntity();
@@ -866,8 +869,10 @@ WHERE
             // Generate new username
             $tmpname = explode(" ", $name['fname']);
             $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
-//var_dump($name);
+var_dump($name);
+
             // search Local Database for an existing user:
+            unset($student_ldb);
             if (strlen($student_of_asu_mkr['ST108'])>1){      // get existing user by Contingent ID
                 //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 $student_ldb = $this->Students->find()
@@ -938,19 +943,20 @@ WHERE
                     
                     if (($student_of_asu_mkr['std11']==2||$student_of_asu_mkr['std11']==4)&&($student_ldb->status_id==1)){
                         $data['status_id'] = 10;  //Move student TO archive:
+                        $this->options['archive_student']++;
                     } elseif ($student_ldb->status_id==10&&$student_of_asu_mkr['std11']==0) {
                         $data['status_id'] = 1;    //Get student FROM archive:
                     }
                     
                     if($rename>0){
-//var_dump("RENAME-strart=".$data);
+var_dump("RENAME-strart=".$data);
                             if ($this->Students->save($data)) {
                                 $this->options['rename_student']++;
-//var_dump("RENAME-ok! ".$this->options['rename_student']);                                
+var_dump("RENAME-ok! ".$this->options['rename_student']);                                
                                 $this->status=true;
                             }
                     }
-                }else{
+                } else {
                     //add a new one student
                     $data = $this->Students->newEntity();
                     $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
@@ -972,7 +978,7 @@ WHERE
                     $data['user_name'] = $name['uname'];
                     $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
                     $data['password'] = $this->_generate_pass();
-                    if ($student_of_asu_mkr['ST108']<>''){   //should be newer executed but for compatibility
+                    if (strlen($student_of_asu_mkr['ST108'])>1){   //should be newer executed but for compatibility
                         $data['student_id'] = $student_of_asu_mkr['ST108'];  //for gsync
                     } else {
                         $data['student_id'] = $student_of_asu_mkr['ST1'];    //for gsync
@@ -986,16 +992,39 @@ WHERE
                         $data['status_id'] = 3;
                         $this->options['clone_login_in students']++;
                     }
-//var_dump("NEW-start=".$data);
+var_dump("NEW-start=".$data);
                     if ($this->Students->save($data)) {
                         $new_student_for_email++;
                         $this->options['new_student']++;
                         $this->status=true;
-//var_dump("NEW-OK=".$data['asumkr_id']);
+var_dump("NEW-OK=".$data['asumkr_id']);
                     } else {
                         $this->options['new_student_failed']++;
-//var_dump("NEW-failed=".$data['asumkr_id']);
+var_dump("NEW-failed=".$data['asumkr_id']);
                     }
+                }
+            } else {
+                if (isset($student_ldb)){
+                    $rename=0;
+                    $data = $this->Students->get($student_ldb->id);
+                    if (($student_of_asu_mkr['std11']==2||$student_of_asu_mkr['std11']==4) && $student_ldb->status_id!=10){
+                        $rename++;
+                        $data['status_id'] = 10;
+                        $this->options['archive_student']++;
+                    }else if (($student_of_asu_mkr['std11']<>2||$student_of_asu_mkr['std11']<>4) && $student_ldb->status_id==10){
+                        $rename++;
+                        $data['status_id'] = 1;
+                    }
+
+                    if($rename>0){
+var_dump("RENAME(archive)-strart=".$data);
+                        if ($this->Students->save($data)) {
+                            $this->options['rename_student']++;
+                            $this->status=true;
+var_dump("RENAME(archive)-ok! ".$this->options['rename_student']);                             
+//                           $this->message[]['message']='Editing students: '.$this->options['rename_student'];
+                        }
+                    }                
                 }
             }
         }
@@ -1083,34 +1112,32 @@ var_dump($img);
         $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
-var_dump("START-asu_last_name=".$student_of_asu_mkr['ST2']);
-var_dump("asu_ID=".$student_of_asu_mkr['ST1']);
-var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
             $txtreport .= "START-asu_last_name=".$student_of_asu_mkr['ST2']."\r\n";
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
             //ZERO check - against manually entered ASU MKR IDs:
-            unset($student_ldb);
-                $student_ldb = $this->Students->find()
-                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1'], 'status_id' => 1])
-                    ->first();
-            if (isset($student_ldb)){
-var_dump("RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id);
-                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id."\r\n";
+            unset($students_ldb);
+                $students_ldb = $this->Students->find()
+                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']]);
+            if (isset($students_ldb)&&($students_ldb->count()>0)){
+                unset($student_ldb);
+                foreach($students_ldb as $student_ldb){
+                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id.", status=".$student_ldb->status_id."\r\n";
                     $singleinstance++;
                     $asuidingaps++;
+                }
             } elseif (strlen($student_of_asu_mkr['ST108'])>1) {
-            //if (strlen($student_of_asu_mkr['ST108'])>1) {
                 //First check - is it kontingent ID existing
-                unset($student_ldb);
-                $student_ldb = $this->Students->find()
-                    ->where(['student_id' => $student_of_asu_mkr['ST108'], 'status_id' => 1])
-                    ->first();
-                if (isset($student_ldb)){
-var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
-                    $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id."\r\n";
-                    $singleinstance++;
-                    $contidinasu++;
+                unset($students_ldb);
+                $students_ldb = $this->Students->find()
+                    ->where(['student_id' => $student_of_asu_mkr['ST108']]);
+                if (isset($students_ldb)&&($students_ldb->count()>0)){
+                    unset($student_ldb);
+                    foreach($students_ldb as $student_ldb){
+                        $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id.", status=".$student_ldb->status_id."\r\n";
+                        $singleinstance++;
+                        $contidinasu++;
+                    }
                 }
             } else {
                 // clean-up names - LDB has cleaned values!
@@ -1136,6 +1163,7 @@ var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
                     ->where(['last_name' => $asu_mkr_lname]);
 
                 if (isset($students_ldb)){
+                  if ($students_ldb->count()>0){
                     unset($student_ldb);
                     foreach($students_ldb as $student_ldb){
                         $found_pos[$student_ldb->id] = $student_ldb->student_id;
@@ -1166,6 +1194,11 @@ var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
                             }
                         }
                     }
+                  } else {
+                        $notfound++;
+                        $notfound_pos[] = $student_of_asu_mkr;
+                        $txtreport .= "RESULT - NOT FOUND!\r\n";                      
+                  } 
                 }
             }
         }
