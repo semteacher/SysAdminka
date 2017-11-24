@@ -843,53 +843,12 @@ WHERE
         }
     }
     
-    /*
-     * Sync Students from ASU MKR into Local DataBase
-     */
-    private function _sync_ASU_with_LDB_users(){
-        $this->loadModel('Students');
+    private function _update_student_record_by_ASU($data, $student_of_asu_mkr, $student_ldb){
         $this->loadModel('Schools');
-        //$this->_max_id();
-        
-        foreach($this->students_mkr as $student_of_asu_mkr){
-            
-            //Prepare and clean-up names on Ukrainian or English
-            if ($student_of_asu_mkr['ST32']==804){ //ukrainians
-                $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
-                $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
-                $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
-            } else {                            //foreign
-                $asu_mkr_fname = ($student_of_asu_mkr['ST75']!=null?$this->_name_cleanup($student_of_asu_mkr['ST75']):$this->_name_cleanup($student_of_asu_mkr['ST3']));
-                $asu_mkr_mname = ($student_of_asu_mkr['ST76']!=null?$this->_name_cleanup($student_of_asu_mkr['ST76']):$this->_name_cleanup($student_of_asu_mkr['ST4']));
-                $asu_mkr_lname = ($student_of_asu_mkr['ST74']!=null?$this->_name_cleanup($student_of_asu_mkr['ST74']):$this->_name_cleanup($student_of_asu_mkr['ST2']));
-            }
-            
-            $name['fname'] = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
-            $name['lname'] = $asu_mkr_lname;
-            // Generate new username
-            $tmpname = explode(" ", $name['fname']);
-            $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
-var_dump($name);
-
-            // search Local Database for an existing user:
-            unset($student_ldb);
-            if (strlen($student_of_asu_mkr['ST108'])>1){      // get existing user by Contingent ID
-                //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                $student_ldb = $this->Students->find()
-                    ->where(['student_id' => $student_of_asu_mkr['ST108']])
-                    ->first();
-            } else {                               // get existing user by ASU MKR ID
-                $student_ldb = $this->Students->find()
-                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']])
-                    ->first();            
-            }
-            
-            if ($student_of_asu_mkr['std11']==0){ //student!
-                if (isset($student_ldb)){
-                    $rename=0;
+        $rename=0;
                     //update existing student's record
-                    $data = $this->Students->get($student_ldb->id);
-                    if ($student_of_asu_mkr['ST1']!=$student_ldb->asumkr_id){ //should be really executed first time only
+                    //$data = $this->Students->get($student_ldb->id);
+                    if ($student_of_asu_mkr['ST1']!=$student_ldb->asumkr_id){ //should be executed first time only
                         $rename++;
                         $data['asumkr_id']=$student_of_asu_mkr['ST1'];
                     }
@@ -946,88 +905,148 @@ var_dump($name);
                         $this->options['archive_student']++;
                     } elseif ($student_ldb->status_id==10&&$student_of_asu_mkr['std11']==0) {
                         $data['status_id'] = 1;    //Get student FROM archive:
-                    }
-                    
-                    if($rename>0){
-var_dump("RENAME-strart=".$data);
-                            if ($this->Students->save($data)) {
-                                $this->options['rename_student']++;
-var_dump("RENAME-ok! ".$this->options['rename_student']);                                
-                                $this->status=true;
-                            }
+                    }        
+        return array($rename, $data);
+    }
+    
+    private function _LDB_get_student_by_ASUID($tmp_student_of_asu_mkr, $status=1){
+        $this->loadModel('Students');
+                // search GAPS Local Database for an existing ACTIVE students in two ways:
+                unset($tmp_student_ldb);
+                if (strlen($tmp_student_of_asu_mkr['ST108'])>1){ // get existing user by Contingent ID
+                    //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    $tmp_student_ldb = $this->Students->find()
+                        ->where(['student_id' => $tmp_student_of_asu_mkr['ST108'], 'status_id'=>$status])
+                        ->first();
+                } else {                                    // get existing user by ASU MKR ID
+                    $tmp_student_ldb = $this->Students->find()
+                        ->where(['asumkr_id' => $tmp_student_of_asu_mkr['ST1'], 'status_id'=>$status])
+                        ->first();            
+                }
+        return $tmp_student_ldb;
+    }
+    /*
+     * Sync Students from ASU MKR into Local DataBase
+     */
+    private function _sync_ASU_with_LDB_users(){
+        $this->loadModel('Students');
+        $this->loadModel('Schools');
+        //$this->_max_id();
+        
+        foreach($this->students_mkr as $student_of_asu_mkr){
+            //Prepare and clean-up names on Ukrainian or English
+            if ($student_of_asu_mkr['ST32']==804){ //ukrainians
+                $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
+                $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
+                $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
+            } else {                            //foreign
+                $asu_mkr_fname = ($student_of_asu_mkr['ST75']!=null?$this->_name_cleanup($student_of_asu_mkr['ST75']):$this->_name_cleanup($student_of_asu_mkr['ST3']));
+                $asu_mkr_mname = ($student_of_asu_mkr['ST76']!=null?$this->_name_cleanup($student_of_asu_mkr['ST76']):$this->_name_cleanup($student_of_asu_mkr['ST4']));
+                $asu_mkr_lname = ($student_of_asu_mkr['ST74']!=null?$this->_name_cleanup($student_of_asu_mkr['ST74']):$this->_name_cleanup($student_of_asu_mkr['ST2']));
+            }
+            
+            $name['fname'] = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
+            $name['lname'] = $asu_mkr_lname;
+            // Generate new username
+            $tmpname = explode(" ", $name['fname']);
+            $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
+var_dump($name);
+            
+            if ($student_of_asu_mkr['std11']==0){ //ACTIVE student!
+                $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 1); //get Active student's data
+                if (isset($student_ldb)){
+var_dump("RENAME-found_active=".$student_ldb->count());
+                    $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb);
+                    //if($rename>0){
+                    if($upd_status[0]>0){
+var_dump("RENAME-active-strart=".$upd_status[1]);
+                        //if ($this->Students->save($data)) {
+                        if ($this->Students->save($upd_status[1])) {
+                            $this->options['rename_student']++;
+var_dump("RENAME-active-ok! ".$this->options['rename_student']);                                
+                            $this->status=true;
+                        }
                     }
                 } else {
-                    //add a new one student
-                    $data = $this->Students->newEntity();
-                    $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
-                    //$data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
-                    $data['f_id'] = $student_of_asu_mkr['F1'];
-                    //use old Contingent id for gsync
-                    $school = $this->Schools->find()
+                    $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 10); //get Archive student's data
+                    if (isset($student_ldb)){
+var_dump("RENAME-found_archive=".$student_ldb->count());
+                        $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb);
+                    
+                        //if($rename>0){
+                        if($upd_status[0]>0){
+var_dump("RENAME-get_form_archive-strart=".$upd_status[1]);
+                            //if ($this->Students->save($data)) {
+                            if ($this->Students->save($upd_status[1])) {
+                                $this->options['rename_student']++;
+var_dump("RENAME-get_form_archive-ok! ".$this->options['rename_student']);                                
+                                $this->status=true;
+                            }
+                        }
+                    } else {
+                        //add a new one student
+                        $data = $this->Students->newEntity();
+                        $data['student_id'] = $student_of_asu_mkr['ST1'];
+                        $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
+                        //$data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
+                        $data['f_id'] = $student_of_asu_mkr['F1'];
+                        //use old Contingent id for gsync
+                        $school = $this->Schools->find()
                             ->where(['f_id' => $student_of_asu_mkr['F1']])
                             ->first();
-                    if ($school) {
-                        $data['school_id'] = $school->school_id;   //for gsync
-                    }
-                    $data['pnsp_id'] = $student_of_asu_mkr['PNSP1'];
-                    $data['sp_id'] = $student_of_asu_mkr['SP1'];
-                    $data['special_id'] = $student_of_asu_mkr['SP1']; //for gsync
-                    $data['groupnum'] = $student_of_asu_mkr['GR3'];
-                    $data['first_name'] = $name['fname'];
-                    $data['last_name'] = $name['lname'];
-                    $data['user_name'] = $name['uname'];
-                    $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
-                    $data['password'] = $this->_generate_pass();
-                    if (strlen($student_of_asu_mkr['ST108'])>1){   //should be newer executed but for compatibility
-                        $data['student_id'] = $student_of_asu_mkr['ST108'];  //for gsync
-                    } else {
-                        $data['student_id'] = $student_of_asu_mkr['ST1'];    //for gsync
-                    }
-                    ($student_of_asu_mkr['std11']<>2||$student_of_asu_mkr['std11']<>4) ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
-                    $student_login_clone = $this->Students->find()
-                        ->where(['user_name' => $name['uname']])
-                        ->first();
+                        if ($school) {
+                            $data['school_id'] = $school->school_id;   //for gsync
+                        }
+                        $data['pnsp_id'] = $student_of_asu_mkr['PNSP1'];
+                        $data['sp_id'] = $student_of_asu_mkr['SP1'];
+                        $data['special_id'] = $student_of_asu_mkr['SP1']; //for gsync
+                        $data['groupnum'] = $student_of_asu_mkr['GR3'];
+                        $data['first_name'] = $name['fname'];
+                        $data['last_name'] = $name['lname'];
+                        $data['user_name'] = $name['uname'];
+                        $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
+                        $data['password'] = $this->_generate_pass();
+                    
+                        if (strlen($student_of_asu_mkr['ST108'])>1){    //store legacy CONTINGENT ID if exist
+                            $data['c_stud_id'] = $student_of_asu_mkr['ST108'];  
+                        }
+                        //($student_of_asu_mkr['std11']<>2||$student_of_asu_mkr['std11']<>4) ?  $data['status_id'] = 1 :  $data['status_id'] = 10;//TODO:will newer occur?
+                        $data['status_id'] = 1;
+                        $student_login_clone = $this->Students->find()
+                            ->where(['user_name' => $name['uname']])
+                            ->first();
 
-                    if (isset($student_login_clone)){
-                        $data['status_id'] = 3;
-                        $this->options['clone_login_in students']++;
-                    }
+                        if (isset($student_login_clone)){   //check if clone
+                            $data['status_id'] = 3;
+                            $this->options['clone_login_in students']++;
+                        }
 var_dump("NEW-start=".$data);
-                    if ($this->Students->save($data)) {
-                        $new_student_for_email++;
-                        $this->options['new_student']++;
-                        $this->status=true;
+                        if ($this->Students->save($data)) {
+                            $new_student_for_email++;
+                            $this->options['new_student']++;
+                            $this->status=true;
 var_dump("NEW-OK=".$data['asumkr_id']);
-                    } else {
-                        $this->options['new_student_failed']++;
+                        } else {
+                            $this->options['new_student_failed']++;
 var_dump("NEW-failed=".$data['asumkr_id']);
+                        } 
                     }
                 }
-            } else {
+            } else { //ARCHIVE student!
+                $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 1); //get Active student's data
                 if (isset($student_ldb)){
-                    $rename=0;
-                    $data = $this->Students->get($student_ldb->id);
-                    if (($student_of_asu_mkr['std11']==2||$student_of_asu_mkr['std11']==4) && $student_ldb->status_id!=10){
-                        $rename++;
-                        $data['status_id'] = 10;
-                        $this->options['archive_student']++;
-                    }else if (($student_of_asu_mkr['std11']<>2||$student_of_asu_mkr['std11']<>4) && $student_ldb->status_id==10){
-                        $rename++;
-                        $data['status_id'] = 1;
+                    $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb);
+                    $upd_status[1]['status_id'] = 10;  //force archive status
+var_dump("RENAME(2archive)-strart=".$upd_status[1]);
+                    if ($this->Students->save($data)) {
+                        $this->options['rename_student']++;
+                        $this->status=true;
+var_dump("RENAME(2archive)-ok! ".$this->options['rename_student']);
                     }
-
-                    if($rename>0){
-var_dump("RENAME(archive)-strart=".$data);
-                        if ($this->Students->save($data)) {
-                            $this->options['rename_student']++;
-                            $this->status=true;
-var_dump("RENAME(archive)-ok! ".$this->options['rename_student']);                             
-//                           $this->message[]['message']='Editing students: '.$this->options['rename_student'];
-                        }
-                    }                
                 }
             }
         }
+
         if(($this->options['rename_student']==0) and ($this->options['new_student']==0)){
             $this->message[]['message']="Sorry, there are no new records in ASU MKR database. Also, ".$this->options['new_student_failed']." students records failed to create!";
         }
