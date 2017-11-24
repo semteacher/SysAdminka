@@ -1112,9 +1112,6 @@ var_dump($img);
         $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
-var_dump("START-asu_last_name=".$student_of_asu_mkr['ST2']);
-var_dump("asu_ID=".$student_of_asu_mkr['ST1']);
-var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
             $txtreport .= "START-asu_last_name=".$student_of_asu_mkr['ST2']."\r\n";
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
@@ -1123,25 +1120,20 @@ var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
                 $students_ldb = $this->Students->find()
                     ->where(['asumkr_id' => $student_of_asu_mkr['ST1']]);
             if (isset($students_ldb)&&($students_ldb->count()>0)){
-var_dump($students_ldb->count());                
                 unset($student_ldb);
                 foreach($students_ldb as $student_ldb){
-var_dump("RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id);
                     $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id.", status=".$student_ldb->status_id."\r\n";
                     $singleinstance++;
                     $asuidingaps++;
                 }
             } elseif (strlen($student_of_asu_mkr['ST108'])>1) {
-            //if (strlen($student_of_asu_mkr['ST108'])>1) {
                 //First check - is it kontingent ID existing
                 unset($students_ldb);
                 $students_ldb = $this->Students->find()
                     ->where(['student_id' => $student_of_asu_mkr['ST108']]);
                 if (isset($students_ldb)&&($students_ldb->count()>0)){
-var_dump($students_ldb->count());                    
                     unset($student_ldb);
                     foreach($students_ldb as $student_ldb){
-var_dump("RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id);
                         $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id.", status=".$student_ldb->status_id."\r\n";
                         $singleinstance++;
                         $contidinasu++;
