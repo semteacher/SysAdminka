@@ -848,9 +848,13 @@ WHERE
         $rename=0;
                     //update existing student's record
                     //$data = $this->Students->get($student_ldb->id);
-                    if ($student_of_asu_mkr['ST1']!=$student_ldb->asumkr_id){ //should be executed first time only
+                    //if ($student_of_asu_mkr['ST1']!=$student_ldb->asumkr_id){ //should be executed first time only
+                    //    $rename++;
+                    //    $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                    //}
+                    if ($student_of_asu_mkr['ST1']!=$student_ldb->student_id){ //should be executed first time only
                         $rename++;
-                        $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                        $data['student_id']=$student_of_asu_mkr['ST1'];
                     }
                     if ($student_of_asu_mkr['F1']!=$student_ldb->f_id){
                         $rename++;
@@ -911,13 +915,23 @@ WHERE
     
     private function _LDB_get_student_by_ASUID($tmp_student_of_asu_mkr, $status=1){
         $this->loadModel('Students');
-                // search GAPS Local Database for an existing ACTIVE students in two ways:
-                unset($tmp_student_ldb);
-                if (strlen($tmp_student_of_asu_mkr['ST108'])>1){ // get existing user by Contingent ID
-                    //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    $tmp_student_ldb = $this->Students->find()
-                        ->where(['student_id' => $tmp_student_of_asu_mkr['ST108'], 'status_id'=>$status])
-                        ->first();
+        // search GAPS Local Database for an existing ACTIVE students in two ways:
+        unset($tmp_student_ldb);
+        $tmp_student_ldb = $this->Students->find()
+            ->where(['asumkr_id' => $tmp_student_of_asu_mkr['ST1'], 'status_id'=>$status])
+            ->first();
+//debug
+$tmpdupl = array(3,7,11,12);
+if(in_array($status, $tmpdupl)){
+var_dump("sub-search-by-asuid=".$tmp_student_of_asu_mkr['ST1']."-for-status=".$status);
+var_dump($tmp_student_ldb);
+}       
+        if (!isset($student_ldb)) {
+            if (strlen($tmp_student_of_asu_mkr['ST108'])>1){ // get existing user by Contingent ID
+            //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            $tmp_student_ldb = $this->Students->find()
+                ->where(['c_stud_id' => $tmp_student_of_asu_mkr['ST108'], 'status_id'=>$status])
+                ->first();
 //debug
 $tmpdupl = array(3,7,11,12);
 if(in_array($status, $tmpdupl)){
@@ -925,17 +939,8 @@ var_dump("sub-search-by-contid=".$tmp_student_of_asu_mkr['ST108']."-for-status="
 var_dump($tmp_student_ldb);
 }
                         
-                } else {                                    // get existing user by ASU MKR ID
-                    $tmp_student_ldb = $this->Students->find()
-                        ->where(['asumkr_id' => $tmp_student_of_asu_mkr['ST1'], 'status_id'=>$status])
-                        ->first();
-//debug
-$tmpdupl = array(3,7,11,12);
-if(in_array($status, $tmpdupl)){
-var_dump("sub-search-by-asuid=".$tmp_student_of_asu_mkr['ST1']."-for-status=".$status);
-var_dump($tmp_student_ldb);
-}
-                }
+            }
+        }
         return $tmp_student_ldb;
     }
     /*
@@ -1025,7 +1030,7 @@ var_dump("NEW-skip by status_dontsync! =".$student_ldb->id);
                       if ($createnew) {
                         //add a new one student
                         $data = $this->Students->newEntity();
-                        $data['student_id'] = $student_of_asu_mkr['ST1'];
+                        $data['student_id'] = $student_of_asu_mkr['ST1'];  //use new asu MKR ID
                         $data['asumkr_id'] = $student_of_asu_mkr['ST1'];
                         //$data['school_id'] = $student_of_asu_mkr['F1'];      //for gsync
                         $data['f_id'] = $student_of_asu_mkr['F1'];
@@ -1141,6 +1146,7 @@ var_dump($img);
             ALTER TABLE `specials` ALTER `specials`.`pnsp_id` SET DEFAULT 0;
             ALTER TABLE `specials` ALTER `specials`.`sp_id` SET DEFAULT 0;
             ALTER TABLE `specials` ALTER `specials`.`cont_id` SET DEFAULT 0;
+            ALTER TABLE `students` MODIFY `students`.`c_stud_id` TEXT(28);
             UPDATE `specials` SET `specials`.`pnsp_id`=0, `specials`.`sp_id`=0 WHERE ISNULL(`specials`.`pnsp_id`)=1;
             UPDATE `specials` SET `specials`.`cont_id`=0 WHERE ISNULL(`specials`.`cont_id`)=1;
             UPDATE `students` SET 
@@ -1148,7 +1154,9 @@ var_dump($img);
             `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`); 
                UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`;
                UPDATE `students` SET `students`.`c_stud_id` = `students`.`student_id`;               
-               UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`; ";
+               UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`;
+               CREATE INDEX idx_contid ON `students` (`c_stud_id`);
+               CREATE INDEX idx_asumkrid ON `students` (`asumkr_id`);";
         $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($updatespeciality_sql);
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
@@ -1165,6 +1173,8 @@ var_dump($img);
         $contidinasu = 0;
         $multipleinstances = 0;
         $multipleresolved = 0;
+        $LDBupdateOK = 0;
+        $LDBupdateFail = 0;
         $txtreport = '';
         
         $notfound_pos = array();
@@ -1196,6 +1206,17 @@ var_dump($img);
                         $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id.", status=".$student_ldb->status_id."\r\n";
                         $singleinstance++;
                         $contidinasu++;
+                        //UPDATE LDB:
+                        $data = $this->Students->get($student_ldb->id);
+                        $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                        $data['student_id']=$student_of_asu_mkr['ST1'];
+                        if ($this->Students->save($data)) {
+                            $LDBupdateOK++;
+                            $txtreport .= "RESULT -found-gaps-by-contid1(isset), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                        } else {
+                            $LDBupdateFail++;
+                            $txtreport .= "RESULT -found-gaps-by-contid1(isset), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                        }
                     }
                 } else {
                     // clean-up names - LDB has cleaned values!
@@ -1236,6 +1257,17 @@ var_dump($img);
                             $txtreport .= "RESULT -found-by-name(single): ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']."\r\n";
                             //UPDATE ASU MKR DATABASE:
                             $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                            //UPDATE LDB:
+                            $data = $this->Students->get($student_ldb->id);
+                            $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                            $data['student_id']=$student_of_asu_mkr['ST1'];
+                            if ($this->Students->save($data)) {
+                                $LDBupdateOK++;
+                                $txtreport .= "RESULT -found-by-name(single), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                            } else {
+                                $LDBupdateFail++;
+                                $txtreport .= "RESULT -found-by-name(single), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                            }
                         } else { // found - MULTIPLE OCCYURENCES
                             $multipleinstances++;
                             $found_multiple = array_merge($found_multiple,$found_pos2);
@@ -1247,6 +1279,17 @@ var_dump($img);
                                     //UPDATE ASU MKR DATABASE:
                                     $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
                                     $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                                    //UPDATE LDB:
+                                    $data = $this->Students->get($student_ldb->id);
+                                    $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                                    $data['student_id']=$student_of_asu_mkr['ST1'];
+                                    if ($this->Students->save($data)) {
+                                        $LDBupdateOK++;
+                                        $txtreport .= "RESULT -found-by-name(from multiple), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                    } else {
+                                        $LDBupdateFail++;
+                                        $txtreport .= "RESULT -found-by-name(from multiple), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                    }
                                 }
                             }
                         } 
@@ -1260,7 +1303,7 @@ var_dump($img);
         }
 
         //prepare total repor message
-        $totalresultmessage = 'Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.', ASUIDinGAPS= '.$asuidingaps.') Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved;
+        $totalresultmessage = 'Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.', ASUIDinGAPS= '.$asuidingaps.') Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved.' UPDATE LDB OK='.$LDBupdateOK.' UPDATE LDB Fail='.$LDBupdateFail;
         $this->message[]['message']= $totalresultmessage;
         $txtreport .= "\r\n".$totalresultmessage;
         //save all report files
