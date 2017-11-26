@@ -324,6 +324,9 @@ var_dump($this->request->data['file']['name']);
                 $this->_sync_ASU_with_LDB_spec();
             }
             if ($this->request->data(['all_students_asumkr'])==on){
+                 $this->options['rename_student']=0;
+                 $this->options['new_student']=0;
+                 
                  $this->_get_students_asu_mkr();
                  $this->_sync_ASU_with_LDB_users();
             }
@@ -943,6 +946,46 @@ var_dump($tmp_student_ldb);
         }
         return $tmp_student_ldb;
     }
+    
+    private function create_Google_username($namearr){
+        $tmpname = explode(" ", $namearr['fname']);
+        $tmpFname = $this->_create_username(trim($tmpname[0]));
+        $tmpMname = $this->_create_username(trim($tmpname[1]));
+        $tmpLastName = $this->_create_username(trim($namearr['lname']));
+        if (strlen($tmpLastName)<2) {
+            if (strlen($tmpFname)>2){
+                $tmpLastName = $tmpFname;
+            } elseif (strlen($tmpMname)>2) {
+                $tmpLastName = $tmpMname;
+            } else {
+                $tmpLastName = 'nolastname';
+            }
+        }
+        if (strlen($tmpFname)<2) {
+            if (strlen($tmpFname)>2){
+                $tmpFname = substr($tmpLastName,0,3);
+            } elseif (strlen($tmpMname)>2) {
+                $tmpFname = substr($tmpMname,0,3);
+            } else {
+                $tmpFname = 'nfn';
+            }
+        } else {
+            $tmpFname = substr($tmpFname,0,3);
+        }
+        if (strlen($tmpMname)<2) {
+            if (strlen($tmpFname)>2){
+                $tmpMname = substr($tmpLastName,0,3);
+            } elseif (strlen($tmpFname)>2) {
+                $tmpMname = substr($tmpFname,0,3);
+            } else {
+                $tmpMname = 'nmn';
+            }
+        } else {
+            $tmpMname = substr($tmpMname,0,3);
+        }
+        $username = $tmpLastName."_".$tmpFname.$tmpMname;
+        return $username;
+    }
     /*
      * Sync Students from ASU MKR into Local DataBase
      */
@@ -966,8 +1009,10 @@ var_dump($tmp_student_ldb);
             $name['fname'] = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
             $name['lname'] = $asu_mkr_lname;
             // Generate new username
-            $tmpname = explode(" ", $name['fname']);
-            $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
+            
+            $name['uname'] = $this->create_Google_username($name);
+            //$tmpname = explode(" ", $name['fname']);
+            //$name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
 var_dump("BEGIN_ACTIVE- name to search ASU MKR ID=".$student_of_asu_mkr['ST1']);
 var_dump($name);
             
