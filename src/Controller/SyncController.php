@@ -1016,7 +1016,7 @@ var_dump($tmp_student_ldb);
 var_dump("BEGIN_ACTIVE- name to search ASU MKR ID=".$student_of_asu_mkr['ST1']);
 var_dump($name);
             
-            if ($student_of_asu_mkr['std11']==0){ //ACTIVE student!
+            if ($student_of_asu_mkr['std11']==0&&$student_of_asu_mkr['F1']>0&&$student_of_asu_mkr['pnsp_id']>0&&$student_of_asu_mkr['sp_id']>0){ //completely ACTIVE student!
                 unset($student_ldb);
                 $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 1); //get Active student's data
                 if (isset($student_ldb)){
@@ -1122,16 +1122,18 @@ var_dump("NEW-failed=".$data['asumkr_id']);
                       } 
                     }
                 }
-            } else { //ARCHIVE student!
-                $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 1); //get Active student's data
-                if (isset($student_ldb)&&($student_ldb->id>0)){
-                    $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb, $name);
-                    $upd_status[1]['status_id'] = 10;  //force archive status
+            } else { //possible ARCHIVE student!
+                if ($student_of_asu_mkr['std11']>0&&$student_of_asu_mkr['F1']>0&&$student_of_asu_mkr['pnsp_id']>0&&$student_of_asu_mkr['sp_id']>0){ //really ARCHIVE student!
+                    $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 1); //get Active student's data
+                    if (isset($student_ldb)&&($student_ldb->id>0)){
+                        $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb, $name);
+                        $upd_status[1]['status_id'] = 10;  //force archive status
 var_dump("RENAME(2archive)-strart=".$upd_status[1]);
-                    if ($this->Students->save($data)) {
-                        $this->options['rename_student']++;
-                        $this->status=true;
+                        if ($this->Students->save($data)) {
+                            $this->options['rename_student']++;
+                            $this->status=true;
 var_dump("RENAME(2archive)-ok! ".$this->options['rename_student']);
+                        }
                     }
                 }
             }
