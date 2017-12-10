@@ -532,7 +532,6 @@ var_dump($this->request->data['file']['name']);
                 if (isset($student_ldb)){
                     $rename=0;
                     $student_of_contingent['NFIO']!=null ? $name = $this->_emplode_fi($student_of_contingent['NFIO']) : $name = $this->_emplode_fi($student_of_contingent['FIO']);
-//var_dump('Check (update): '.$student_of_contingent['STUDENTID'].' - '.$student_of_contingent['FIO'].' - '.$student_of_contingent['NFIO']);
                     $data = $this->Students->get($student_ldb->id);
                     if ($student_of_contingent['DEPARTMENTID']!=$student_ldb->school_id){
                         $rename++;
@@ -577,7 +576,7 @@ var_dump($this->request->data['file']['name']);
 
 
                 }else{
-var_dump('Create new record: '.$student_of_contingent['STUDENTID'].' - '.$student_of_contingent['FIO'].' - '.$student_of_contingent['NFIO']);
+//var_dump('Create new record: '.$student_of_contingent['STUDENTID'].' - '.$student_of_contingent['FIO'].' - '.$student_of_contingent['NFIO']);
                     $student_of_contingent['NFIO']!=null ? $name = $this->_emplode_fi($student_of_contingent['NFIO']) : $name = $this->_emplode_fi($student_of_contingent['FIO']);
                     
                     $name['uname'] = $this->create_Google_username($name);
@@ -940,11 +939,11 @@ WHERE
             ->where(['asumkr_id' => $tmp_student_of_asu_mkr['ST1'], 'status_id'=>$status])
             ->first();
 //debug
-$tmpdupl = array(3,7,11,12);
-if(in_array($status, $tmpdupl)){
-var_dump("sub-search-by-asuid=".$tmp_student_of_asu_mkr['ST1']."-for-status=".$status);
-var_dump($tmp_student_ldb);
-}       
+//$tmpdupl = array(3,7,11,12);
+//if(in_array($status, $tmpdupl)){
+//var_dump("sub-search-by-asuid=".$tmp_student_of_asu_mkr['ST1']."-for-status=".$status);
+//var_dump($tmp_student_ldb);
+//}       
         if (!isset($student_ldb)) {
             if (strlen($tmp_student_of_asu_mkr['ST108'])>1){ // get existing user by Contingent ID
             //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -952,11 +951,11 @@ var_dump($tmp_student_ldb);
                 ->where(['c_stud_id' => $tmp_student_of_asu_mkr['ST108'], 'status_id'=>$status])
                 ->first();
 //debug
-$tmpdupl = array(3,7,11,12);
-if(in_array($status, $tmpdupl)){
-var_dump("sub-search-by-contid=".$tmp_student_of_asu_mkr['ST108']."-for-status=".$status);
-var_dump($tmp_student_ldb);
-}
+//$tmpdupl = array(3,7,11,12);
+//if(in_array($status, $tmpdupl)){
+//var_dump("sub-search-by-contid=".$tmp_student_of_asu_mkr['ST108']."-for-status=".$status);
+//var_dump($tmp_student_ldb);
+//}
                         
             }
         }
@@ -1027,27 +1026,26 @@ var_dump($tmp_student_ldb);
             // Generate new username
             
             $name['uname'] = $this->create_Google_username($name);
-            //$tmpname = explode(" ", $name['fname']);
-            //$name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
-var_dump("BEGIN_ACTIVE- name to search ASU MKR ID=".$student_of_asu_mkr['ST1']);
-var_dump($name);
-var_dump('std11='.$student_of_asu_mkr['STD11']);
-var_dump('f_id='.$student_of_asu_mkr['F1']);
-var_dump('pnsp_id='.$student_of_asu_mkr['PNSP1']);
-var_dump('sp_id='.$student_of_asu_mkr['SP1']);
+            
+//var_dump("BEGIN_ACTIVE- name to search ASU MKR ID=".$student_of_asu_mkr['ST1']);
+//var_dump($name);
+//var_dump('std11='.$student_of_asu_mkr['STD11']);
+//var_dump('f_id='.$student_of_asu_mkr['F1']);
+//var_dump('pnsp_id='.$student_of_asu_mkr['PNSP1']);
+//var_dump('sp_id='.$student_of_asu_mkr['SP1']);
             if (($student_of_asu_mkr['STD11']==0||$student_of_asu_mkr['STD11']==8)&&$student_of_asu_mkr['F1']>0&&$student_of_asu_mkr['PNSP1']>0&&$student_of_asu_mkr['SP1']>0){ //completely ACTIVE student!
                 unset($student_ldb);
                 $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 1); //get Active student's data
                 if (isset($student_ldb)){
-var_dump("Found as ACTIVE - check if need to rename=".$student_ldb->last_name);
+//var_dump("Found as ACTIVE - check if need to rename=".$student_ldb->last_name);
                     $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb, $name);
                     //if($rename>0){
                     if($upd_status[0]>0){
-var_dump("RENAME-active-strart=".$upd_status[1]);
+//var_dump("RENAME-active-strart=".$upd_status[1]);
                         //if ($this->Students->save($data)) {
                         if ($this->Students->save($upd_status[1])) {
                             $this->options['rename_student']++;
-var_dump("RENAME-active-ok! ".$this->options['rename_student']);                                
+//var_dump("RENAME-active-ok! ".$this->options['rename_student']);                                
                             $this->status=true;
                         }
                     }
@@ -1055,16 +1053,16 @@ var_dump("RENAME-active-ok! ".$this->options['rename_student']);
                     unset($student_ldb);
                     $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 10); //get Archive student's data
                     if (isset($student_ldb)){
-var_dump("Found as ARCHIVE - check if need to rename=".$student_ldb->last_name);
+//var_dump("Found as ARCHIVE - check if need to rename=".$student_ldb->last_name);
                         $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb, $name);
                     
                         //if($rename>0){
                         if($upd_status[0]>0){
-var_dump("RENAME-get_form_archive-strart=".$upd_status[1]);
+//var_dump("RENAME-get_form_archive-strart=".$upd_status[1]);
                             //if ($this->Students->save($data)) {
                             if ($this->Students->save($upd_status[1])) {
                                 $this->options['rename_student']++;
-var_dump("RENAME-get_form_archive-ok! ".$this->options['rename_student']);                                
+//var_dump("RENAME-get_form_archive-ok! ".$this->options['rename_student']);                                
                                 $this->status=true;
                             }
                         }
@@ -1074,22 +1072,22 @@ var_dump("RENAME-get_form_archive-ok! ".$this->options['rename_student']);
                         unset($student_ldb);
                         $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 3);
                         if (isset($student_ldb)){ $createnew = false; 
-var_dump("NEW-skip by status_clone! =".$student_ldb->id);
+//var_dump("NEW-skip by status_clone! =".$student_ldb->id);
                         }
                         unset($student_ldb);
                         $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 7);
                         if (isset($student_ldb)){ $createnew = false; 
-var_dump("NEW-skip by status_ignore! =".$student_ldb->id);                        
+//var_dump("NEW-skip by status_ignore! =".$student_ldb->id);                        
                         }
                         unset($student_ldb);
                         $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 11);
                         if (isset($student_ldb)){ $createnew = false; 
-var_dump("NEW-skip by status_2faculty! =".$student_ldb->id);
+//var_dump("NEW-skip by status_2faculty! =".$student_ldb->id);
                         }
                         unset($student_ldb);
                         $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 12);
                         if (isset($student_ldb)){ $createnew = false; 
-var_dump("NEW-skip by status_dontsync! =".$student_ldb->id);                        
+//var_dump("NEW-skip by status_dontsync! =".$student_ldb->id);                        
                         }
                       if ($createnew) {
                         //add a new one student
@@ -1128,15 +1126,15 @@ var_dump("NEW-skip by status_dontsync! =".$student_ldb->id);
                             $data['status_id'] = 3;
                             $this->options['clone_login_in students']++;
                         }
-var_dump("NEW-start=".$data);
+//var_dump("NEW-start=".$data);
                         if ($this->Students->save($data)) {
                             $new_student_for_email++;
                             $this->options['new_student']++;
                             $this->status=true;
-var_dump("NEW-OK=".$data['asumkr_id']);
+//var_dump("NEW-OK=".$data['asumkr_id']);
                         } else {
                             $this->options['new_student_failed']++;
-var_dump("NEW-failed=".$data['asumkr_id']);
+//var_dump("NEW-failed=".$data['asumkr_id']);
                         }
                       } 
                     }
@@ -1148,11 +1146,11 @@ var_dump("NEW-failed=".$data['asumkr_id']);
                     if (isset($student_ldb)&&($student_ldb->id>0)){
                         $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb, $name);
                         $upd_status[1]['status_id'] = 10;  //force archive status
-var_dump("RENAME(2archive)-strart=".$upd_status[1]);
+//var_dump("RENAME(2archive)-strart=".$upd_status[1]);
                         if ($this->Students->save($upd_status[1])) {
                             $this->options['rename_student']++;
                             $this->status=true;
-var_dump("RENAME(2archive)-ok! ".$this->options['rename_student']);
+//var_dump("RENAME(2archive)-ok! ".$this->options['rename_student']);
                         }
                     }
                 }
@@ -1179,8 +1177,8 @@ var_dump("RENAME(2archive)-ok! ".$this->options['rename_student']);
                 $this->students_mkr_photo = $this->asu_mkr->gets_bdd("SELECT foto3 FROM foto WHERE ((foto1=".$student_of_asu_mkr['ST1'].")AND(foto2=1));");
                 //put photo ino file
                 $img = ibase_blob_get(ibase_blob_open($students_mkr_photo[0]['PHOTO']), ibase_blob_info($students_mkr_photo[0]['PHOTO'])[0]);
-var_dump($students_mkr_photo[0]['PHOTO']);
-var_dump($img);
+//var_dump($students_mkr_photo[0]['PHOTO']);
+//var_dump($img);
                 //TODO: need debug first
                 //file_put_contents('photo/'.$student_ldb['user_name'].'.jpg', $img);
                 ibase_blob_close($students_mkr_photo[0]['PHOTO']);
