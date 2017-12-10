@@ -1189,29 +1189,16 @@ WHERE
     }    
     
     private function _initial_update_ldb_affiliation_ids() {
-        //$this->loadModel('Students');
         $conn = ConnectionManager::get('default');
-        // Update specialities default id's. Execute once - no more necessary
-        $updatespecialitydefaults_sql = 
-            "ALTER TABLE `specials` ALTER `specials`.`pnsp_id` SET DEFAULT 0;".
-            "ALTER TABLE `specials` ALTER `specials`.`sp_id` SET DEFAULT 0;".
-            "ALTER TABLE `specials` ALTER `specials`.`cont_id` SET DEFAULT 0;".
-            "UPDATE `specials` SET `specials`.`pnsp_id`=0, `specials`.`sp_id`=0 WHERE ISNULL(`specials`.`pnsp_id`)=1;".
-            "UPDATE `specials` SET `specials`.`cont_id`=0 WHERE ISNULL(`specials`.`cont_id`)=1;";
-//        $specialitydefaults_results = $conn->execute($updatespecialitydefaults_sql);
-//var_dump($specialitydefaults_results);
         // Update faculties id's. Execute once - no more necessary
         $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`); ";
-    //    UPDATE `schools` SET `schools`.`school_id` = `schools`.`f_id`;
-    //    UPDATE `students` SET `students`.`school_id`=`students`.`f_id`; ";
         $faculty_results = $conn->execute($updatefaculty_sql);
-//var_dump($faculty_results);
-        // TODO: update specialities id's. Execute once - no more necessary
+        //update specialities default as well as id's. Execute once - no more necessary
         $updatespeciality_sql = "
             ALTER TABLE `specials` ALTER `specials`.`pnsp_id` SET DEFAULT 0;
             ALTER TABLE `specials` ALTER `specials`.`sp_id` SET DEFAULT 0;
             ALTER TABLE `specials` ALTER `specials`.`cont_id` SET DEFAULT 0;
-            ALTER TABLE `students` MODIFY `students`.`c_stud_id` TEXT(28);
+            ALTER TABLE `students` MODIFY `students`.`c_stud_id` VARCHAR(28);
             UPDATE `specials` SET `specials`.`pnsp_id`=0, `specials`.`sp_id`=0 WHERE ISNULL(`specials`.`pnsp_id`)=1;
             UPDATE `specials` SET `specials`.`cont_id`=0 WHERE ISNULL(`specials`.`cont_id`)=1;
             UPDATE `students` SET 
@@ -1225,7 +1212,6 @@ WHERE
             ALTER TABLE `students` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci; 
             ";
         $speciality_results = $conn->execute($updatespeciality_sql);
-//var_dump($updatespeciality_sql);
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
     }
     
