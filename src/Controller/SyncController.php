@@ -314,8 +314,12 @@ var_dump($this->request->data['file']['name']);
                 $this->_sync_archive();
             }
             if ($this->request->data(['all_students'])==on){
-                 $this->_get_students();
-                 $this->_sync_C_with_LDB_users();
+                $this->options['new_student'] = 0;
+                $this->options['new_student_failed'] = 0;
+                $this->options['clone_login_in students'] = 0;
+                
+                $this->_get_students();
+                $this->_sync_C_with_LDB_users();
             }
             
             //----------ASU MKR actions begin------------------
@@ -393,7 +397,7 @@ var_dump($this->request->data['file']['name']);
                 $data['statistics']=json_encode($this->options);
                 $data['date']=mktime();
                 if ($this->Synchronized->save($data)) {
-                    $this->message[]['message']='Sync is Ok. DB write status Ok. New students: '.$this->options['new_student'].', renamed students:'.$this->options['rename_student'];
+                    $this->message[]['message']='Sync is Ok. DB write status Ok. New students: '.$this->options['new_student'].' (FAILED: '.$this->options['new_student_failed'].'), renamed students:'.$this->options['rename_student'];
                 }
             }
             $this->Flash->error_form($this->message);
@@ -528,6 +532,7 @@ var_dump($this->request->data['file']['name']);
                 if (isset($student_ldb)){
                     $rename=0;
                     $student_of_contingent['NFIO']!=null ? $name = $this->_emplode_fi($student_of_contingent['NFIO']) : $name = $this->_emplode_fi($student_of_contingent['FIO']);
+//var_dump('Check (update): '.$student_of_contingent['STUDENTID'].' - '.$student_of_contingent['FIO'].' - '.$student_of_contingent['NFIO']);
                     $data = $this->Students->get($student_ldb->id);
                     if ($student_of_contingent['DEPARTMENTID']!=$student_ldb->school_id){
                         $rename++;
@@ -572,7 +577,11 @@ var_dump($this->request->data['file']['name']);
 
 
                 }else{
+var_dump('Create new record: '.$student_of_contingent['STUDENTID'].' - '.$student_of_contingent['FIO'].' - '.$student_of_contingent['NFIO']);
                     $student_of_contingent['NFIO']!=null ? $name = $this->_emplode_fi($student_of_contingent['NFIO']) : $name = $this->_emplode_fi($student_of_contingent['FIO']);
+                    
+                    $name['uname'] = $this->create_Google_username($name);
+                    
                     $data = $this->Students->newEntity();
                     $data['student_id'] = $student_of_contingent['STUDENTID'];
                     $data['school_id'] = $student_of_contingent['DEPARTMENTID'];
@@ -582,6 +591,7 @@ var_dump($this->request->data['file']['name']);
                     $data['last_name'] = $name['lname'];
                     $data['user_name'] = $name['uname'];
                     $data['grade_level'] = $student_of_contingent['SEMESTER'];
+                    $data['send_photo_google'] = 0;
                     $data['password'] = $this->_generate_pass();
                     $student_of_contingent['ARCHIVE']==1 ?  $data['status_id'] = 10 :  $data['status_id'] = 1;
 
@@ -593,12 +603,18 @@ var_dump($this->request->data['file']['name']);
                         $data['status_id'] = 3;
                         $this->options['clone_login_in students']++;
                     }
-
+                    //var_dump($data);
+                    //$savedb = $this->Students->save($data);
                     if ($this->Students->save($data)) {
+                    //if ($savedb) {
                         $new_student_for_email++;
                         $this->options['new_student']++;
                         $this->status=true;
 //                        $this->message[]['message']='New students: '.$this->options['new_student'];
+                    } else {
+                            $this->options['new_student_failed']++;
+                            debug($data->errors());
+                            //var_dump('failed! - '.$student_of_contingent['STUDENTID']);
                     }
                 }
             } else {
@@ -907,10 +923,10 @@ WHERE
                     //    $data['status_id'] = 1;
                     //}
                     
-                    if (($student_of_asu_mkr['std11']==2||$student_of_asu_mkr['std11']==4)&&($student_ldb->status_id==1)){
+                    if (($student_of_asu_mkr['STD11']==2||$student_of_asu_mkr['STD11']==4)&&($student_ldb->status_id==1)){
                         $data['status_id'] = 10;  //Move student TO archive:
                         $this->options['archive_student']++;
-                    } elseif ($student_ldb->status_id==10&&$student_of_asu_mkr['std11']==0) {
+                    } elseif ($student_ldb->status_id==10&&$student_of_asu_mkr['STD11']==0) {
                         $data['status_id'] = 1;    //Get student FROM archive:
                     }        
         return array($rename, $data);
@@ -1015,8 +1031,11 @@ var_dump($tmp_student_ldb);
             //$name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username(trim($tmpname[0][0].$tmpname[0][1].$tmpname[0][2].$tmpname[0][3].$tmpname[1][0].$tmpname[1][1].$tmpname[1][2].$tmpname[1][3])); //start username as abbreviate in English
 var_dump("BEGIN_ACTIVE- name to search ASU MKR ID=".$student_of_asu_mkr['ST1']);
 var_dump($name);
-            
-            if ($student_of_asu_mkr['std11']==0&&$student_of_asu_mkr['F1']>0&&$student_of_asu_mkr['pnsp_id']>0&&$student_of_asu_mkr['sp_id']>0){ //completely ACTIVE student!
+var_dump('std11='.$student_of_asu_mkr['STD11']);
+var_dump('f_id='.$student_of_asu_mkr['F1']);
+var_dump('pnsp_id='.$student_of_asu_mkr['PNSP1']);
+var_dump('sp_id='.$student_of_asu_mkr['SP1']);
+            if (($student_of_asu_mkr['STD11']==0||$student_of_asu_mkr['STD11']==8)&&$student_of_asu_mkr['F1']>0&&$student_of_asu_mkr['PNSP1']>0&&$student_of_asu_mkr['SP1']>0){ //completely ACTIVE student!
                 unset($student_ldb);
                 $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 1); //get Active student's data
                 if (isset($student_ldb)){
@@ -1123,13 +1142,14 @@ var_dump("NEW-failed=".$data['asumkr_id']);
                     }
                 }
             } else { //possible ARCHIVE student!
-                if ($student_of_asu_mkr['std11']>0&&$student_of_asu_mkr['F1']>0&&$student_of_asu_mkr['pnsp_id']>0&&$student_of_asu_mkr['sp_id']>0){ //really ARCHIVE student!
+                if (($student_of_asu_mkr['STD11']>0&&$student_of_asu_mkr['STD11']<8)&&$student_of_asu_mkr['F1']>0&&$student_of_asu_mkr['PNSP1']>0&&$student_of_asu_mkr['SP1']>0){ //really ARCHIVE student!
+                    unset($student_ldb);
                     $student_ldb = $this->_LDB_get_student_by_ASUID($student_of_asu_mkr, 1); //get Active student's data
                     if (isset($student_ldb)&&($student_ldb->id>0)){
                         $upd_status = $this->_update_student_record_by_ASU($this->Students->get($student_ldb->id),$student_of_asu_mkr, $student_ldb, $name);
                         $upd_status[1]['status_id'] = 10;  //force archive status
 var_dump("RENAME(2archive)-strart=".$upd_status[1]);
-                        if ($this->Students->save($data)) {
+                        if ($this->Students->save($upd_status[1])) {
                             $this->options['rename_student']++;
                             $this->status=true;
 var_dump("RENAME(2archive)-ok! ".$this->options['rename_student']);
@@ -1199,11 +1219,13 @@ var_dump($img);
             UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
             `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`); 
-               UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`;
-               UPDATE `students` SET `students`.`c_stud_id` = `students`.`student_id`;               
-               UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`;
-               CREATE INDEX idx_contid ON `students` (`c_stud_id`);
-               CREATE INDEX idx_asumkrid ON `students` (`asumkr_id`);";
+            UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`;
+            UPDATE `students` SET `students`.`c_stud_id` = `students`.`student_id`;               
+            UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`;
+            CREATE INDEX idx_contid ON `students` (`c_stud_id`);
+            CREATE INDEX idx_asumkrid ON `students` (`asumkr_id`);               
+            ALTER TABLE `students` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci; 
+            ";
         $speciality_results = $conn->execute($updatespeciality_sql);
 //var_dump($updatespeciality_sql);
         $this->message[]['message']='ASU MKR faculties and specialities IDs have been updated for students';
