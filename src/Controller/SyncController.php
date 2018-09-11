@@ -732,9 +732,9 @@ var_dump($this->request->data['file']['name']);
     private function _test_ping_asu_mkr(){
         $this->test_mkr = $this->asu_mkr->gets("
 			SELECT First 1 ST.ST1 AS STUDENTID
-			FROM ST inner join std on (st.st1 = std.std2) WHERE (std7 is null)AND((STD11<>2)OR(STD11<>4))
+			FROM ST inner join std on (st.st1 = std.std2) WHERE (st.st1>0)AND(std7 is null)AND((STD11<>2)OR(STD11<>4))
             ");
-        if (!isset($this->test[1]['STUDENTID'])) $this->Flash->error('Connect to ASU MKR not found!!!');
+        if (!isset($this->test_mkr[1]['STUDENTID'])) $this->Flash->error('Connect to ASU MKR not found!!!');
     }
     
     /*
