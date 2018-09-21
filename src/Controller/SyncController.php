@@ -1189,9 +1189,10 @@ WHERE
     }    
     
     private function _initial_update_ldb_affiliation_ids() {
+        //LIVE TEST - cont spec c_sprec_id=61 <=> asu_spec sp_id=17
         $conn = ConnectionManager::get('default');
         // Update faculties id's. Execute once - no more necessary
-        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`); ";
+        $updatefaculty_sql = "UPDATE `students` SET `students`.`f_id` = (SELECT `schools`.`f_id` FROM `schools` WHERE  `schools`.`school_id`=`students`.`school_id`) WHERE `students`.`c_sprec_id`=61; ";
         $faculty_results = $conn->execute($updatefaculty_sql);
         //update specialities default as well as id's. Execute once - no more necessary
         $updatespeciality_sql = "
@@ -1204,9 +1205,9 @@ WHERE
             UPDATE `students` SET 
             `students`.`pnsp_id` = (SELECT `specials`.`pnsp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`),
             `students`.`sp_id` = (SELECT `specials`.`sp_id` FROM `specials` WHERE  `specials`.`special_id`=`students`.`special_id`); 
-            UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id`;
+            UPDATE `specials` SET `specials`.`special_id` = `specials`.`sp_id` WHERE `specials`.`sp_id` = 17;
             UPDATE `students` SET `students`.`c_stud_id` = `students`.`student_id`;               
-            UPDATE `students` SET `students`.`special_id`=`students`.`sp_id`;
+            UPDATE `students` SET `students`.`special_id`=`students`.`sp_id` WHERE `students`.`c_sprec_id`=61;
             CREATE INDEX idx_contid ON `students` (`c_stud_id`);
             CREATE INDEX idx_asumkrid ON `students` (`asumkr_id`);               
             ALTER TABLE `students` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci; 
@@ -1234,6 +1235,7 @@ WHERE
         $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
+if ($student_of_asu_mkr['SP1']==17) {  //LIVE TEST - cont spec c_sprec_id=61 <=> asu_spec sp_id=17         
             $txtreport .= "START-asu_last_name=".$student_of_asu_mkr['ST2']."\r\n";
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
@@ -1353,6 +1355,7 @@ WHERE
                     }
                 }
             }
+}
         }
 
         //prepare total repor message
