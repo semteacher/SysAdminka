@@ -190,7 +190,7 @@ var_dump($this->request->data['file']['name']);
 
     private function _get_students(){
         $this->students = $this->contingent->gets("
-			SELECT STUDENTS.DEPARTMENTID,STUDENTS.SEMESTER,STUDENTS.FIO,STUDENTS.NFIO,STUDENTS.STUDENTID,STUDENTS.PHOTO,STUDENTS.ARCHIVE,STUDENTS.GROUPNUM,STUDENTS.STATUS,STUDENTS.SPECIALITYID
+			SELECT STUDENTS.DEPARTMENTID,STUDENTS.SEMESTER,STUDENTS.FIO,STUDENTS.NFIO,STUDENTS.STUDENTID,STUDENTS.PHOTO,STUDENTS.ARCHIVE,STUDENTS.GROUPNUM,STUDENTS.STATUS,STUDENTS.SPECIALITYID,STUDENTS.IDCODE 
 			FROM STUDENTS WHERE ARCHIVE=0");
     }
     private function _get_speciality(){
@@ -548,6 +548,12 @@ var_dump($this->request->data['file']['name']);
                     if ($student_of_contingent['GROUPNUM']!=$student_ldb->groupnum){
                         $rename++;
                         $data['groupnum']=$student_of_contingent['GROUPNUM'];
+                    }
+                    if(isset($student_of_contingent['IDCODE'])){
+                        if ($student_of_contingent['IDCODE']!=$student_ldb->pid){
+                            $rename++;
+                            $data['pid']=$student_of_contingent['IDCODE'];
+                        }
                     }
                     if ($name['fname']!=$student_ldb->first_name){
                         $rename++;
