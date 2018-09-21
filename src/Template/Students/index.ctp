@@ -36,6 +36,7 @@
             <th style="max-width:120px" class="col-xs-2 hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">Special</th>
             <th style="max-width:20px" class="col-xs-1 hidden-xs hidden-sm" data-filterable="select" data-sortable="true" data-sort-order="2">Sem</th>
             <th style="max-width:120px" class="hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">Student_id</th>
+            <th style="max-width:100px" class="hidden-xs hidden-sm" data-filterable="text" data-sortable="true" data-sort-order="2">PID</th>
             <th style="max-width:20px" class="col-xs-1 hidden-xs hidden-sm" data-filterable="select" data-sortable="true" data-sort-order="2">Group</th>
             <th style="max-width:50px" data-filterable="text" data-sortable="true" data-sort-order="2">First_name</th>
             <th style="max-width:50px" data-filterable="text" data-sortable="true" data-sort-order="2">Last_name</th>
@@ -57,6 +58,7 @@
             </td>
             <td class='hidden-xs hidden-sm'><?= $student->grade_level ?></td>
             <td class='hidden-xs hidden-sm'><?= $this->Text->autoParagraph(h($student->student_id)); ?></td>
+            <td class='hidden-xs hidden-sm'><?= $this->Text->autoParagraph(h($student->pid)); ?></td>
             <td class='hidden-xs hidden-sm'><?= $student->groupnum ?></td>
             <td><?= $this->Text->autoParagraph(h($student->first_name)); ?></td>
             <td><?= $this->Text->autoParagraph(h($student->last_name)); ?></td>

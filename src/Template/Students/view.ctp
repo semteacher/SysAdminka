@@ -23,6 +23,13 @@
     </div>
     <div class="row texts">
         <div class="columns large-9">
+            <h6 class="subheader"><?= __('PID') ?></h6>
+            <?= $this->Text->autoParagraph(h($student->pid)); ?>
+
+        </div>
+    </div>    
+    <div class="row texts">
+        <div class="columns large-9">
             <h6 class="subheader"><?= __('First Name') ?></h6>
             <?= $this->Text->autoParagraph(h($student->first_name)); ?>
 
