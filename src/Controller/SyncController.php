@@ -549,12 +549,12 @@ var_dump($this->request->data['file']['name']);
                         $rename++;
                         $data['groupnum']=$student_of_contingent['GROUPNUM'];
                     }
-                    if(isset($student_of_contingent['IDCODE'])){
-                        if ($student_of_contingent['IDCODE']!=$student_ldb->pid){
-                            $rename++;
-                            $data['pid']=$student_of_contingent['IDCODE'];
-                        }
-                    }
+//                    if(isset($student_of_contingent['IDCODE'])){
+//                        if ($student_of_contingent['IDCODE']!=$student_ldb->pid){
+//                            $rename++;
+//                            $data['pid']=$student_of_contingent['IDCODE'];
+//                        }
+//                    }
                     if ($name['fname']!=$student_ldb->first_name){
                         $rename++;
                         $data['first_name']=$name['fname'];
