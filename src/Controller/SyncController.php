@@ -549,12 +549,12 @@ var_dump($this->request->data['file']['name']);
                         $rename++;
                         $data['groupnum']=$student_of_contingent['GROUPNUM'];
                     }
-//                    if(isset($student_of_contingent['IDCODE'])){
-//                        if ($student_of_contingent['IDCODE']!=$student_ldb->pid){
-//                            $rename++;
-//                            $data['pid']=$student_of_contingent['IDCODE'];
-//                        }
-//                    }
+                    if(isset($student_of_contingent['IDCODE'])){
+                        if ($student_of_contingent['IDCODE']!=$student_ldb->pid){
+                            $rename++;
+                            $data['ipn_id']=$student_of_contingent['IDCODE'];
+                        }
+                    }
                     if ($name['fname']!=$student_ldb->first_name){
                         $rename++;
                         $data['first_name']=$name['fname'];
@@ -607,6 +607,9 @@ var_dump($this->request->data['file']['name']);
                     if (isset($student_login_clone)){
                         $data['status_id'] = 3;
                         $this->options['clone_login_in students']++;
+                    }
+                    if(isset($student_of_contingent['IDCODE'])){
+                        $data['ipn_id']=$student_of_contingent['IDCODE'];
                     }
                     //var_dump($data);
                     //$savedb = $this->Students->save($data);
