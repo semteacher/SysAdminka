@@ -768,6 +768,7 @@ select
     st.st2,
     st.st3,
     st.st4,
+    st.st15,
     st.st32,
     st.st71, 
     st.st74, 
@@ -1233,6 +1234,7 @@ WHERE
         $singleinstance = 0;
         $asuidingaps = 0;
         $contidinasu = 0;
+        $ipnidinasu = 0;
         $multipleinstances = 0;
         $multipleresolved = 0;
         $LDBupdateOK = 0;
@@ -1281,91 +1283,115 @@ WHERE
                         }
                     }
                 } else {
-                    // clean-up names - LDB has cleaned values!
-                    if ($student_of_asu_mkr['ST32']==804){ //ukrainians
-                        $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
-                        $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
-                        $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
-                    } else {                            //foreign
-                        $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST75']);
-                        $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST76']);
-                        $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST74']);            
-                    }
-            
-                    $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
-                    $txtreport .= "STEP2-search by ASU names=".$asu_mkr_lname." ".$asu_mkr_search_fname."\r\n";
-                    $found_pos=array();
-                    $found_pos2=array();
-
-                    // Recommended update LDB first - to remove duplication of spaces and trailing spaces....
+                    //Second check - is it IPN ID existing
                     unset($students_ldb);
-                    $students_ldb = $this->Students->find('all')
-                        ->where(['first_name' => $asu_mkr_search_fname])
-                        ->where(['last_name' => $asu_mkr_lname]);
-                    if (isset($students_ldb)&&($students_ldb->count()>0)){
+                    $students_ldb = $this->Students->find()
+                        ->where(['ipn_id' => $student_of_asu_mkr['ST15']]);
+                    if(isset($students_ldb)&&($students_ldb->count()>0)){
                         unset($student_ldb);
                         foreach($students_ldb as $student_ldb){
-                            $found_pos[$student_ldb->id] = $student_ldb->student_id;
-                            $found_pos2[$student_ldb->id] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name, 'statusID'=>$student_ldb->status_id);
-                        }
-                        if (count($found_pos)==0) { // NOT FOUND!
-                            $notfound++;
-                            $notfound_pos[] = $student_of_asu_mkr;
-                            $txtreport .= "RESULT - NOT FOUND!\r\n";
-                        } elseif(count($found_pos)==1) { // found - SINGLE OCCYURENCE - OK!
+                            $txtreport .= "RESULT -found-gaps-by-ionid1(isset)=".$student_ldb->ipn_id.", status=".$student_ldb->status_id."\r\n";
                             $singleinstance++;
-                            $found_keys = array_keys($found_pos);
-                            $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
-                            $txtreport .= "RESULT -found-by-name(single): ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']."\r\n";
-                            //UPDATE ASU MKR DATABASE:
-                            $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                            $ipnidinasu++;
                             //UPDATE LDB:
                             $data = $this->Students->get($student_ldb->id);
                             $data['asumkr_id']=$student_of_asu_mkr['ST1'];
                             $data['student_id']=$student_of_asu_mkr['ST1'];
                             if ($this->Students->save($data)) {
                                 $LDBupdateOK++;
-                                $txtreport .= "RESULT -found-by-name(single), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                $txtreport .= "RESULT -found-gaps-by-ipnid1(isset), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
                             } else {
                                 $LDBupdateFail++;
-                                $txtreport .= "RESULT -found-by-name(single), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                $txtreport .= "RESULT -found-gaps-by-ipnid1(isset), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
                             }
-                        } else { // found - MULTIPLE OCCYURENCES
-                            $multipleinstances++;
-                            $found_multiple = array_merge($found_multiple,$found_pos2);
-                            //update ASU MRR DB for only active student's
-                            foreach ($found_pos2 as $student2resolve) {
-                                if ($student2resolve['statusID'] == 1){
-                                    $multipleresolved++;
-                                    $txtreport .= "RESULT -found-by-name(from multiple): ContID=".$student2resolve['contID'].", Name=".$student2resolve['LName']." ".$student2resolve['FName']."\r\n";
-                                    //UPDATE ASU MKR DATABASE:
-                                    $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
-                                    $results = $this->asu_mkr->sets($asu_mkr_update_sql);
-                                    //UPDATE LDB:
-                                    $data = $this->Students->get($student_ldb->id);
-                                    $data['asumkr_id']=$student_of_asu_mkr['ST1'];
-                                    $data['student_id']=$student_of_asu_mkr['ST1'];
-                                    if ($this->Students->save($data)) {
-                                        $LDBupdateOK++;
-                                        $txtreport .= "RESULT -found-by-name(from multiple), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
-                                    } else {
-                                        $LDBupdateFail++;
-                                        $txtreport .= "RESULT -found-by-name(from multiple), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                        }                        
+                    } else {
+                        // clean-up names - LDB has cleaned values!
+                        if ($student_of_asu_mkr['ST32']==804){ //ukrainians
+                            $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST3']);
+                            $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST4']);
+                            $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST2']);
+                        } else {                            //foreign
+                            $asu_mkr_fname = $this->_name_cleanup($student_of_asu_mkr['ST75']);
+                            $asu_mkr_mname = $this->_name_cleanup($student_of_asu_mkr['ST76']);
+                            $asu_mkr_lname = $this->_name_cleanup($student_of_asu_mkr['ST74']);            
+                        }
+            
+                        $asu_mkr_search_fname = rtrim($asu_mkr_fname.' '.$asu_mkr_mname); //often happens with foreign persons - no middle name
+                        $txtreport .= "STEP2-search by ASU names=".$asu_mkr_lname." ".$asu_mkr_search_fname."\r\n";
+                        $found_pos=array();
+                        $found_pos2=array();
+
+                        // Recommended update LDB first - to remove duplication of spaces and trailing spaces....
+                        unset($students_ldb);
+                        $students_ldb = $this->Students->find('all')
+                            ->where(['first_name' => $asu_mkr_search_fname])
+                            ->where(['last_name' => $asu_mkr_lname]);
+                        if (isset($students_ldb)&&($students_ldb->count()>0)){
+                            unset($student_ldb);
+                            foreach($students_ldb as $student_ldb){
+                                $found_pos[$student_ldb->id] = $student_ldb->student_id;
+                                $found_pos2[$student_ldb->id] = array('LDB_ID'=>$student_ldb->id, 'contID'=>$student_ldb->student_id, 'FName'=>$student_ldb->first_name, 'LName'=>$student_ldb->last_name, 'statusID'=>$student_ldb->status_id);
+                            }
+                            if (count($found_pos)==0) { // NOT FOUND!
+                                $notfound++;
+                                $notfound_pos[] = $student_of_asu_mkr;
+                                $txtreport .= "RESULT - NOT FOUND!\r\n";
+                            } elseif(count($found_pos)==1) { // found - SINGLE OCCYURENCE - OK!
+                                $singleinstance++;
+                                $found_keys = array_keys($found_pos);
+                                $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                                $txtreport .= "RESULT -found-by-name(single): ContID=".$found_pos[$found_keys[0]]."(".$found_pos2[$found_keys[0]]['contID']."), Name=".$found_pos2[$found_keys[0]]['LName']." ".$found_pos2[$found_keys[0]]['FName']."\r\n";
+                                //UPDATE ASU MKR DATABASE:
+                                $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                                //UPDATE LDB:
+                                $data = $this->Students->get($student_ldb->id);
+                                $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                                $data['student_id']=$student_of_asu_mkr['ST1'];
+                                if ($this->Students->save($data)) {
+                                    $LDBupdateOK++;
+                                    $txtreport .= "RESULT -found-by-name(single), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                } else {
+                                    $LDBupdateFail++;
+                                    $txtreport .= "RESULT -found-by-name(single), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                }
+                            } else { // found - MULTIPLE OCCYURENCES
+                                $multipleinstances++;
+                                $found_multiple = array_merge($found_multiple,$found_pos2);
+                                //update ASU MRR DB for only active student's
+                                foreach ($found_pos2 as $student2resolve) {
+                                    if ($student2resolve['statusID'] == 1){
+                                        $multipleresolved++;
+                                        $txtreport .= "RESULT -found-by-name(from multiple): ContID=".$student2resolve['contID'].", Name=".$student2resolve['LName']." ".$student2resolve['FName']."\r\n";
+                                        //UPDATE ASU MKR DATABASE:
+                                        $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$student2resolve['contID']." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
+                                        $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                                        //UPDATE LDB:
+                                        $data = $this->Students->get($student_ldb->id);
+                                        $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                                        $data['student_id']=$student_of_asu_mkr['ST1'];
+                                        if ($this->Students->save($data)) {
+                                            $LDBupdateOK++;
+                                            $txtreport .= "RESULT -found-by-name(from multiple), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                        } else {
+                                            $LDBupdateFail++;
+                                            $txtreport .= "RESULT -found-by-name(from multiple), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                        }
                                     }
                                 }
-                            }
-                        } 
-                    } else {
-                        $notfound++;
-                        $notfound_pos[] = $student_of_asu_mkr;
-                        $txtreport .= "RESULT - NOT FOUND(isset)!\r\n";
+                            } 
+                        } else {
+                            $notfound++;
+                            $notfound_pos[] = $student_of_asu_mkr;
+                            $txtreport .= "RESULT - NOT FOUND(isset)!\r\n";
+                        }
                     }
                 }
             }
         }
 
         //prepare total repor message
-        $totalresultmessage = 'Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.', ASUIDinGAPS= '.$asuidingaps.') Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved.' UPDATE LDB OK='.$LDBupdateOK.' UPDATE LDB Fail='.$LDBupdateFail;
+        $totalresultmessage = 'Not found='.$notfound.' Found single='.$singleinstance.' (ContIDinASU='.$contidinasu.', IPNIDinASU='.$ipnidinasu.', ASUIDinGAPS= '.$asuidingaps.') Found MULTIPLE='.$multipleinstances.' Resolved MULTIPLE='.$multipleresolved.' UPDATE LDB OK='.$LDBupdateOK.' UPDATE LDB Fail='.$LDBupdateFail;
         $this->message[]['message']= $totalresultmessage;
         $txtreport .= "\r\n".$totalresultmessage;
         //save all report files
