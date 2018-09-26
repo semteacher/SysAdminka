@@ -18,7 +18,7 @@ class Student extends Entity
         'id' => true,
         'school_id' => true,
         'special_id'=> true,
-        'pid'=> true,
+        'ipn_id'=> true,
         'groupnum' => true,
         'first_name' => true,
         'last_name' => true,
