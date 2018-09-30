@@ -911,6 +911,10 @@ WHERE
                         $rename++;
                         $data['grade_level']=$student_of_asu_mkr['ST71'];
                     }
+                    if ($student_of_asu_mkr['ST15']!=$student_ldb->ipn_id){
+                        $rename++;
+                        $data['ipn_id']=$student_of_asu_mkr['ST15'];
+                    }
                     if ($student_of_asu_mkr['GR3']!=$student_ldb->groupnum){
                         $rename++;
                         $data['groupnum']=$student_of_asu_mkr['GR3'];
@@ -1121,6 +1125,7 @@ WHERE
                         $data['last_name'] = $name['lname'];
                         $data['user_name'] = $name['uname'];
                         $data['grade_level'] = (!is_null($student_of_asu_mkr['ST71'])?$student_of_asu_mkr['ST71']:0);
+                        $data['ipn_id']=$student_of_asu_mkr['ST15'];
                         $data['password'] = $this->_generate_pass();
                     
                         if (strlen($student_of_asu_mkr['ST108'])>1){    //store legacy CONTINGENT ID if exist
