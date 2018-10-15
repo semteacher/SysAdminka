@@ -1468,6 +1468,45 @@ WHERE
         }
         $this->message[]['message']= $newportaluser.' new portal users has been created! '.$dbwriteerrors.' DB write errors. '.$missed.' records missed';
     }
+    
+    private function _fix_asumkr_portal_useremails (){
+        $this->loadModel('Students');
+        //$this->_get_asu_mkr_portal_users();
+        $newportaluser = 0;
+        $dbwriteerrors = 0;
+        $missed = 0;
+        $students_ldb = $this->Students->find('all');
+        foreach($students_ldb as $student_ldb){
+            //check if user has been already registered on portal - by username
+            //$this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);
+            //check if user has been already registered on portal - by asumkr_id
+            $this->_get_asu_mkr_portal_user_by_id($student_ldb->asumkr_id, 0);
+//var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
+            if (!is_null($this->asu_mkr_portal_users)){
+//var_dump($student_ldb);
+                //$new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
+                //if ($new_id){
+                if (!strpos('@tdmu.edu.ua', $this->asu_mkr_portal_users['u4'])){    
+//var_dump($new_id);                
+                    // SQL to update a portal user 
+                    $asu_mkr_insert_sql = "UPDATE `users` SET `users`.`u4`='".$student_ldb->user_name."@tdmu.edu.ua' WHERE `users`.`u6`=".$student_ldb->asumkr_id.";";
+//print_r($asu_mkr_insert_sql);
+                    $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
+                    if ($results){
+                        $newportaluser++;
+                    } else {
+                        $dbwriteerrors++;
+                    }
+                } else {
+                    $missed++;
+                }
+            } else { //TODO: debug only
+                //var_dump($student_ldb->student_id);
+                $missed++;
+            }
+        }
+        $this->message[]['message']= $newportaluser.' portal users has been fixed! '.$dbwriteerrors.' DB write errors. '.$missed.' records skipped';
+    }
 
     private function _initial_update_asumkr_portal_teacherdata ($uploadFile){
         $newportaluser = 0;
