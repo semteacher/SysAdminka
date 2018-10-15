@@ -819,6 +819,12 @@ WHERE
         ");
     }
     
+    private function _get_asu_mkr_portal_user_by_id($userid, $usertype=0){
+        unset($this->asu_mkr_portal_users);
+        $this->asu_mkr_portal_users = $this->asu_mkr->gets("
+            SELECT u1 FROM users WHERE u6='".$userid."' AND u5=".$usertype."
+        ");
+    }    
     /*
      * Sync ASU MKR specialities with Local DataBase
      * SP_ID, PNSP_ID
@@ -1252,11 +1258,11 @@ WHERE
         $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
-var_dump("asu_ID=".$student_of_asu_mkr['ST1']);
-var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
-var_dump("asu_IPN (if exist)=".$student_of_asu_mkr['ST15']);
-var_dump("asu_last_name=".$student_of_asu_mkr['ST2']);
-var_dump("----------------------------------");
+//var_dump("asu_ID=".$student_of_asu_mkr['ST1']);
+//var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
+//var_dump("asu_IPN (if exist)=".$student_of_asu_mkr['ST15']);
+//var_dump("asu_last_name=".$student_of_asu_mkr['ST2']);
+//var_dump("----------------------------------");
             $txtreport .= "START-asu_last_name=".$student_of_asu_mkr['ST2']."\r\n";
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
@@ -1421,8 +1427,10 @@ var_dump("----------------------------------");
         $missed = 0;
         $students_ldb = $this->Students->find('all');
         foreach($students_ldb as $student_ldb){
-            //check if user has been already registered on portal
-            $this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);
+            //check if user has been already registered on portal - by username
+            //$this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);
+            //check if user has been already registered on portal - by asumkr_id
+            $this->_get_asu_mkr_portal_user_by_id($student_ldb->asumkr_id, 0);
 //var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
             if (is_null($this->asu_mkr_portal_users)&&!is_null($student_ldb->asumkr_id)){
 //var_dump($student_ldb);
