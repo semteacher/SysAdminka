@@ -716,7 +716,8 @@ var_dump($this->request->data['file']['name']);
      * implode fio -> fname, lname
      */
     private function _emplode_fi($str){
-        if ($str[0]==' '){$str = substr($str, 1);}
+        //if ($str[0]==' '){$str = substr($str, 1);}
+        $str = trim($str); //Remove all leading and trailing spaces 
         $str = str_replace("(","",$str);
         $str = str_replace(")","",$str);
         $str = str_replace("-","",$str);
@@ -1013,6 +1014,7 @@ WHERE
             $tmpMname = substr($tmpMname,0,3);
         }
         $username = $tmpLastName."_".$tmpFname.$tmpMname;
+        $username = str_replace(" ","",$username); //finally: remove all possible ocasional spaces
         return $username;
     }
     /*
@@ -1250,6 +1252,11 @@ WHERE
         $found_multiple = array();
         
         foreach($this->students_mkr as $asu_arr_row=>$student_of_asu_mkr){
+var_dump("asu_ID=".$student_of_asu_mkr['ST1']);
+var_dump("asu_contID (if exist)=".$student_of_asu_mkr['ST108']);
+var_dump("asu_IPN (if exist)=".$student_of_asu_mkr['ST15']);
+var_dump("asu_last_name=".$student_of_asu_mkr['ST2']);
+var_dump("----------------------------------");
             $txtreport .= "START-asu_last_name=".$student_of_asu_mkr['ST2']."\r\n";
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
@@ -1278,7 +1285,7 @@ WHERE
                         //UPDATE LDB:
                         $data = $this->Students->get($student_ldb->id);
                         $data['asumkr_id']=$student_of_asu_mkr['ST1'];
-                        $data['student_id']=$student_of_asu_mkr['ST1'];
+                        //$data['student_id']=$student_of_asu_mkr['ST1'];//Disable - until GAPS break
                         if ($this->Students->save($data)) {
                             $LDBupdateOK++;
                             $txtreport .= "RESULT -found-gaps-by-contid1(isset), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
@@ -1301,7 +1308,7 @@ WHERE
                             //UPDATE LDB:
                             $data = $this->Students->get($student_ldb->id);
                             $data['asumkr_id']=$student_of_asu_mkr['ST1'];
-                            $data['student_id']=$student_of_asu_mkr['ST1'];
+                            //$data['student_id']=$student_of_asu_mkr['ST1'];//Disable - until GAPS break
                             if ($this->Students->save($data)) {
                                 $LDBupdateOK++;
                                 $txtreport .= "RESULT -found-gaps-by-ipnid1(isset), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
@@ -1352,7 +1359,7 @@ WHERE
                                 //UPDATE LDB:
                                 $data = $this->Students->get($student_ldb->id);
                                 $data['asumkr_id']=$student_of_asu_mkr['ST1'];
-                                $data['student_id']=$student_of_asu_mkr['ST1'];
+                                //$data['student_id']=$student_of_asu_mkr['ST1'];//Disable - until GAPS break
                                 if ($this->Students->save($data)) {
                                     $LDBupdateOK++;
                                     $txtreport .= "RESULT -found-by-name(single), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
@@ -1374,7 +1381,7 @@ WHERE
                                         //UPDATE LDB:
                                         $data = $this->Students->get($student_ldb->id);
                                         $data['asumkr_id']=$student_of_asu_mkr['ST1'];
-                                        $data['student_id']=$student_of_asu_mkr['ST1'];
+                                        //$data['student_id']=$student_of_asu_mkr['ST1'];//Disable - until GAPS break
                                         if ($this->Students->save($data)) {
                                             $LDBupdateOK++;
                                             $txtreport .= "RESULT -found-by-name(from multiple), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
