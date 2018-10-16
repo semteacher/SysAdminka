@@ -354,7 +354,9 @@ var_dump($this->request->data['file']['name']);
             if ($this->request->data['init_asumkr_portal_users']==on){
                 $this->_initial_update_asumkr_portal_userdata();
             }
-            
+            if ($this->request->data['fix_asumkr_portal_useremails']==on){
+                $this->_fix_asumkr_portal_useremails();
+            }
             //----------ASU MKR actions end------------------
             
             if ($this->request->data['photo']==on){
@@ -822,7 +824,7 @@ WHERE
     private function _get_asu_mkr_portal_user_by_id($userid, $usertype=0){
         unset($this->asu_mkr_portal_users);
         $this->asu_mkr_portal_users = $this->asu_mkr->gets("
-            SELECT u1 FROM users WHERE u6='".$userid."' AND u5=".$usertype."
+            SELECT u1, u4 FROM users WHERE u6='".$userid."' AND u5=".$usertype."
         ");
     }    
     /*
@@ -1471,27 +1473,23 @@ WHERE
     
     private function _fix_asumkr_portal_useremails (){
         $this->loadModel('Students');
-        //$this->_get_asu_mkr_portal_users();
         $newportaluser = 0;
         $dbwriteerrors = 0;
         $missed = 0;
         $students_ldb = $this->Students->find('all');
         foreach($students_ldb as $student_ldb){
-            //check if user has been already registered on portal - by username
-            //$this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);
             //check if user has been already registered on portal - by asumkr_id
+            if (!is_null($student_ldb->asumkr_id)){
             $this->_get_asu_mkr_portal_user_by_id($student_ldb->asumkr_id, 0);
-//var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
             if (!is_null($this->asu_mkr_portal_users)){
-//var_dump($student_ldb);
-                //$new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
-                //if ($new_id){
-                if (!strpos('@tdmu.edu.ua', $this->asu_mkr_portal_users['u4'])){    
-//var_dump($new_id);                
+                if (!strpos($this->asu_mkr_portal_users[1]['U4'], '@tdmu.edu.ua')){
+//var_dump($this->asu_mkr_portal_users[1]['U4']);
+//var_dump(strpos($this->asu_mkr_portal_users[1]['U4'], '@tdmu.edu.ua' ));
                     // SQL to update a portal user 
-                    $asu_mkr_insert_sql = "UPDATE `users` SET `users`.`u4`='".$student_ldb->user_name."@tdmu.edu.ua' WHERE `users`.`u6`=".$student_ldb->asumkr_id.";";
-//print_r($asu_mkr_insert_sql);
+                    $asu_mkr_insert_sql = "UPDATE users SET users.u4='".$student_ldb->user_name."@tdmu.edu.ua' WHERE users.u6=".$student_ldb->asumkr_id.";";
+//print_r($asu_mkr_insert_sql);                    
                     $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
+//var_dump($results);
                     if ($results){
                         $newportaluser++;
                     } else {
@@ -1501,8 +1499,8 @@ WHERE
                     $missed++;
                 }
             } else { //TODO: debug only
-                //var_dump($student_ldb->student_id);
                 $missed++;
+            }
             }
         }
         $this->message[]['message']= $newportaluser.' portal users has been fixed! '.$dbwriteerrors.' DB write errors. '.$missed.' records skipped';

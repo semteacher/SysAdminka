@@ -156,6 +156,7 @@
                 </div>
             </div>
             <div class="form-group">
+                <div class="row">
                         <div class="col-sm-6 col-md-3">
                             <div class="thumbnail sync">
                                 <label>
@@ -175,6 +176,45 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+                                    <?= $this->Html->image("SyncUser.png", [
+                                        "alt" => "Sync",
+                                        "class"=>"col-xs-12 hidden-xs "
+                                    ]);?>
+                                <div class="caption">
+                                    <h3 class="">Create ASU MKR portal NEW users</h3>
+                                   <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="init_asumkr_portal_users" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+                                    <?= $this->Html->image("SyncUser.png", [
+                                        "alt" => "Sync",
+                                        "class"=>"col-xs-12 hidden-xs "
+                                    ]);?>
+                                <div class="caption">
+                                    <h3 class="">Fix non-tdmu ASU MKR portal users email</h3>
+                                   <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="fix_asumkr_portal_useremails" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
+                </div>        
             </div>
             <div class="form-group">
                 <div class="row">
@@ -195,7 +235,7 @@
                                     <p class="alert alert-info">Syncs all specialities with status "use" in ASU MKR.</p>
                                     <div class="checkbox">
                                         <label>
-                                            <input type="checkbox" name="specials_asumkr" style="width:50px;height: 40px;">
+                                            <input type="checkbox" name="specials_asumkr0" style="width:50px;height: 40px;">
                                         </label>
                                     </div>
                                 </div>
@@ -214,7 +254,7 @@
                                    <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
                                     <div class="checkbox">
                                         <label>
-                                            <input type="checkbox" name="all_students_asumkr" style="width:50px;height: 40px;">
+                                            <input type="checkbox" name="all_students_asumkr0" style="width:50px;height: 40px;">
                                         </label>
                                     </div>
                                 </div>
@@ -234,7 +274,7 @@
                                          <p class="alert alert-danger">Time of synchronization can be more than 2 minute</p>
                                          <div class="checkbox">
                                              <label>
-                                                 <input type="checkbox" name="photo_asumkr" style="width:50px;height: 40px;">
+                                                 <input type="checkbox" name="photo_asumkr0" style="width:50px;height: 40px;">
                                              </label>
                                          </div>
                                      </div>
@@ -246,7 +286,7 @@
             </div>
             <div class="form-group">
                 <div class="row">
-                    <legend><?= __('Contingent -> ASU MKR Migration options') ?></legend>            
+                    <legend><?= __('Contingent -> ASU MKR Migration options (postponned, do not use') ?></legend>            
                 </div>
             </div>
             <div class="form-group">
@@ -264,7 +304,7 @@
                                     <p class="alert alert-danger">Time of processing less than 1 minute</p>
                                     <div class="checkbox">
                                         <label>
-                                            <input type="checkbox" name="init_ldb_dbstructure_upgrade" style="width:50px;height: 40px;">
+                                            <input type="checkbox" name="init_ldb_dbstructure_upgrade0" style="width:50px;height: 40px;">
                                         </label>
                                     </div>
                                 </div>
@@ -308,7 +348,7 @@
                                    <p class="alert alert-danger">Time of synchronization is less than 1 minute</p>
                                     <div class="checkbox">
                                         <label>
-                                            <input type="checkbox" name="init_all_affiliation_asumkr" style="width:50px;height: 40px;">
+                                            <input type="checkbox" name="init_all_affiliation_asumkr0" style="width:50px;height: 40px;">
                                         </label>
                                     </div>
                                 </div>
@@ -346,7 +386,7 @@
                                    <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
                                     <div class="checkbox">
                                         <label>
-                                            <input type="checkbox" name="init_asumkr_portal_users" style="width:50px;height: 40px;">
+                                            <input type="checkbox" name="init_asumkr_portal_users0" style="width:50px;height: 40px;">
                                         </label>
                                     </div>
                                 </div>
