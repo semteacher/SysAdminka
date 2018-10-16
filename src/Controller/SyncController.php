@@ -1429,43 +1429,46 @@ WHERE
         $missed = 0;
         $students_ldb = $this->Students->find('all');
         foreach($students_ldb as $student_ldb){
-            //check if user has been already registered on portal - by username
-            //$this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);
-            //check if user has been already registered on portal - by asumkr_id
-            $this->_get_asu_mkr_portal_user_by_id($student_ldb->asumkr_id, 0);
-//var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
-            if (is_null($this->asu_mkr_portal_users)&&!is_null($student_ldb->asumkr_id)){
-//var_dump($student_ldb);
-                $new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
-                if ($new_id){
-//var_dump($new_id);                
-                    $salt = $this->_asu_portal_generateSalt();
-                    $pass = $this->_asu_portal_setPassword($student_ldb->password, $salt);
-                    $u12key = $this->_asu_portal_generateU12();
-                    // SQL to create a new portal user 
-                    $asu_mkr_insert_sql = "INSERT INTO users (u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u12) VALUES(
-                                            ".$new_id.",
-                                            '".$student_ldb->user_name."',
-                                            '".$pass."',
-                                            '".$student_ldb->user_name."@tdmu.edu.ua',
-                                            0,
-                                            ".$student_ldb->asumkr_id.",
-                                            0,
-                                            0,
-                                            '".$salt."',
-                                            0,
-                                            '".$u12key."');";
-//print_r($asu_mkr_insert_sql);
-                    $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
-                    if ($results){
-                        $newportaluser++;
-                    } else {
-                        $dbwriteerrors++;
+            //process only active students!
+            if ($student_ldb->status_id ==1) {
+                //check if user has been already registered on portal - by username
+                //$this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);
+                //check if user has been already registered on portal - by asumkr_id
+                $this->_get_asu_mkr_portal_user_by_id($student_ldb->asumkr_id, 0);
+    //var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
+                if (is_null($this->asu_mkr_portal_users)&&!is_null($student_ldb->asumkr_id)){
+    //var_dump($student_ldb);
+                    $new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
+                    if ($new_id){
+    //var_dump($new_id);                
+                        $salt = $this->_asu_portal_generateSalt();
+                        $pass = $this->_asu_portal_setPassword($student_ldb->password, $salt);
+                        $u12key = $this->_asu_portal_generateU12();
+                        // SQL to create a new portal user 
+                        $asu_mkr_insert_sql = "INSERT INTO users (u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u12) VALUES(
+                                                ".$new_id.",
+                                                '".$student_ldb->user_name."',
+                                                '".$pass."',
+                                                '".$student_ldb->user_name."@tdmu.edu.ua',
+                                                0,
+                                                ".$student_ldb->asumkr_id.",
+                                                0,
+                                                0,
+                                                '".$salt."',
+                                                0,
+                                                '".$u12key."');";
+    //print_r($asu_mkr_insert_sql);
+                        $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
+                        if ($results){
+                            $newportaluser++;
+                        } else {
+                            $dbwriteerrors++;
+                        }
                     }
+                } else { //TODO: debug only
+                    //var_dump($student_ldb->student_id);
+                    $missed++;
                 }
-            } else { //TODO: debug only
-                //var_dump($student_ldb->student_id);
-                $missed++;
             }
         }
         $this->message[]['message']= $newportaluser.' new portal users has been created! '.$dbwriteerrors.' DB write errors. '.$missed.' records missed';
