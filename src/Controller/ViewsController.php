@@ -57,7 +57,7 @@ class ViewsController extends AppController
                     ' Semester'
                 ]),
                 'idnumber' => 'student_id',
-                'auth' => $data->func()->concat(['googleoauth2']),
+                'auth' => $data->func()->concat(['oauth2']),
                 'profile_field_tsmufaculty' => 'Schools.name',
                 'profile_field_tsmuspeciality' => 'Specials.name',
                 'profile_field_tsmusemester' => 'grade_level',
