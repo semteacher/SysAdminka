@@ -61,8 +61,8 @@ class ViewsController extends AppController
                 'profile_field_tsmufaculty' => 'Schools.name',
                 'profile_field_tsmuspeciality' => 'Specials.name',
                 'profile_field_tsmusemester' => 'grade_level',
-                'profile_field_tsmugroup' => 'groupnum'
-                'profile_field_tsmuasumkrid' => 'asumkr_id'
+                'profile_field_tsmugroup' => 'groupnum',
+                'profile_field_tsmuasumkrid' => 'asumkr_id',
                 'profile_field_tsmuipnid' => 'ipn_id'
             ])->contain([           //! For loading associations!
                 'Schools' => [
