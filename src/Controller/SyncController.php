@@ -826,7 +826,14 @@ WHERE
         $this->asu_mkr_portal_users = $this->asu_mkr->gets("
             SELECT u1, u4 FROM users WHERE u6='".$userid."' AND u5=".$usertype."
         ");
-    }    
+    }
+    
+    private function _get_asu_mkr_portal_user_by_email($useremail, $usertype=0){
+        unset($this->asu_mkr_portal_users_email);
+        $this->asu_mkr_portal_users_email = $this->asu_mkr->gets("
+            SELECT u1, u4 FROM users WHERE u4='".$useremail."' AND u5=".$usertype."
+        ");
+    }
     /*
      * Sync ASU MKR specialities with Local DataBase
      * SP_ID, PNSP_ID
@@ -1435,8 +1442,10 @@ WHERE
                 //$this->_get_asu_mkr_portal_user($student_ldb->user_name, 0);
                 //check if user has been already registered on portal - by asumkr_id
                 $this->_get_asu_mkr_portal_user_by_id($student_ldb->asumkr_id, 0);
+                //check if user has been already registered on portal - by tdmu's email! 
+                $this->_get_asu_mkr_portal_user_by_email($student_ldb->user_name.'@tdmu.edu.ua', 0);
     //var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
-                if (is_null($this->asu_mkr_portal_users)&&!is_null($student_ldb->asumkr_id)){
+                if (is_null($this->asu_mkr_portal_users)&&is_null($this->asu_mkr_portal_users_email)&&!is_null($student_ldb->asumkr_id)){
     //var_dump($student_ldb);
                     $new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
                     if ($new_id){
