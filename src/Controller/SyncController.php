@@ -535,42 +535,61 @@ var_dump($this->request->data['file']['name']);
                     $rename=0;
                     $student_of_contingent['NFIO']!=null ? $name = $this->_emplode_fi($student_of_contingent['NFIO']) : $name = $this->_emplode_fi($student_of_contingent['FIO']);
                     $data = $this->Students->get($student_ldb->id);
+//var_dump($student_ldb);
                     if ($student_of_contingent['DEPARTMENTID']!=$student_ldb->school_id){
                         $rename++;
+//var_dump('rename-dep-CONT='.$student_of_contingent['DEPARTMENTID']);
+//var_dump('rename-local='.$student_ldb->school_id);
                         $data['school_id']=$student_of_contingent['DEPARTMENTID'];
                     }
                     if ($student_of_contingent['SPECIALITYID']!=$student_ldb->special_id){
                         $rename++;
+//var_dump('rename-spec-CONT='.$student_of_contingent['SPECIALITYID']);
+//var_dump('rename-local='.$student_ldb->special_id);
                         $data['special_id']=$student_of_contingent['SPECIALITYID'];
                     }
                     if ($student_of_contingent['SEMESTER']!=$student_ldb->grade_level){
                         $rename++;
+//var_dump('rename-semestr-CONT='.$student_of_contingent['SEMESTER']);
+//var_dump('rename-local='.$student_ldb->grade_level);
                         $data['grade_level']=$student_of_contingent['SEMESTER'];
                     }
                     if ($student_of_contingent['GROUPNUM']!=$student_ldb->groupnum){
                         $rename++;
+//var_dump('rename-grp-CONT='.$student_of_contingent['GROUPNUM']);
+//var_dump('rename-local='.$student_ldb->groupnum);
                         $data['groupnum']=$student_of_contingent['GROUPNUM'];
                     }
                     if(isset($student_of_contingent['IDCODE'])){
-                        if ($student_of_contingent['IDCODE']!=$student_ldb->pid){
+                        if ($student_of_contingent['IDCODE']!=$student_ldb->ipn_id){
                             $rename++;
+//var_dump('rename-idcode-CONT='.$student_of_contingent['IDCODE']);
+//var_dump('rename-local='.$student_ldb->ipn_id);
                             $data['ipn_id']=$student_of_contingent['IDCODE'];
                         }
                     }
                     if ($name['fname']!=$student_ldb->first_name){
                         $rename++;
+//var_dump('rename-fname-CONT='.$name['fname']);
+//var_dump('rename-local='.$student_ldb->first_name);
                         $data['first_name']=$name['fname'];
                     }
                     if ($name['lname']!=$student_ldb->last_name){
                         $rename++;
+//var_dump('rename-lname-CONT='.$name['lname']);
+//var_dump('rename-local='.$student_ldb->last_name);
                         $data['last_name']=$name['lname'];
                     }
                     if ($student_of_contingent['ARCHIVE']==1 and $student_ldb->status_id!=10){
                         $rename++;
+//var_dump('rename-arch-CONT='.$student_of_contingent['ARCHIVE']);
+//var_dump('rename-local='.$student_ldb->status_id);
                         $data['status_id'] = 10;
                         $this->options['archive_student']++;
                     }else if ($student_of_contingent['ARCHIVE']==0 and $student_ldb->status_id==10){
                         $rename++;
+//var_dump('rename-arch-CONT='.$student_of_contingent['ARCHIVE']);
+//var_dump('rename-local='.$student_ldb->status_id);
                         $data['status_id'] = 1;
                     }
                         if($rename>0){
@@ -596,6 +615,7 @@ var_dump($this->request->data['file']['name']);
                     $data['groupnum'] = $student_of_contingent['GROUPNUM'];
                     $data['first_name'] = $name['fname'];
                     $data['last_name'] = $name['lname'];
+//var_dump('will create = '.$data['last_name']);                    
                     $data['user_name'] = $name['uname'];
                     $data['grade_level'] = $student_of_contingent['SEMESTER'];
                     $data['send_photo_google'] = 0;
@@ -729,11 +749,29 @@ var_dump($this->request->data['file']['name']);
         $str = str_replace("`","",$str);
         $str = str_replace("’","",$str);
         $str = str_replace("\"","",$str);
+
         $fullname = explode(" ", $str);
+
         $name['lname']=$fullname[0];
+        $name['firstname']=$fullname[1];
+        $name['middlename']=$fullname[2];
+        //ASU: Set Fname or Mname in place of LastName - if it not exist - to meet Google requirements
+        if (strlen($name['lname'])<2) {
+            if (strlen($name['firstname'])>2){
+                $name['lname'] = $name['firstname'];
+            } elseif (strlen($name['middlename'])>2) {
+                $name['lname'] = $name['middlename'];
+            } else {
+                $name['lname'] = 'noLN';
+            }
+        }
+        
         $name['uname']=$this->_create_username($fullname[0])."_".$this->_create_username($fullname[1][0].$fullname[1][1].$fullname[1][2].$fullname[1][3].$fullname[2][0].$fullname[2][1].$fullname[2][2].$fullname[2][3]);
         unset($fullname[0]);
         $name['fname']=implode(" ", $fullname);
+        
+        $name['uname'] = str_replace(" ","",$name['uname']); //ASU: finally - remove all possible ocasional spaces
+//var_dump($name);
         return $name;
     }
     
