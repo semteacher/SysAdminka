@@ -752,6 +752,7 @@ var_dump($this->request->data['file']['name']);
 
         $fullname = explode(" ", $str);
 
+        //required to be in sync with ASU procedure: fix empty names
         $name['lname']=$fullname[0];
         $name['firstname']=$fullname[1];
         $name['middlename']=$fullname[2];
@@ -764,14 +765,50 @@ var_dump($this->request->data['file']['name']);
             } else {
                 $name['lname'] = 'noLN';
             }
+//var_dump($name);
         }
+        if (strlen($name['firstname'])<2) {
+            if (strlen($name['lname'])>2){
+                $name['firstname'] = substr($name['lname'],0,3);
+            } elseif (strlen($name['middlename'])>2) {
+                $name['firstname'] = substr($name['middlename'],0,3);
+            } else {
+                $name['firstname'] = 'nFN';
+            }
+//var_dump($name);
+        }
+        if (strlen($name['middlename'])<2) {
+            if (strlen($name['lname'])>2){
+                $name['middlename'] = substr($name['lname'],0,3);
+            } elseif (strlen($name['firstname'])>2) {
+                $name['middlename'] = substr($name['firstname'],0,3);
+            } else {
+                $name['middlename'] = 'nMN';
+            }
+//var_dump($name);
+        }
+        //required to be in sync with ASU procedure: assign back
+        $fullname[0] = $name['lname'];
+        $fullname[1] = $name['firstname'];
+        $fullname[2] = $name['middlename'];
         
+        //old way to create username. Should not be used but kept...
         $name['uname']=$this->_create_username($fullname[0])."_".$this->_create_username($fullname[1][0].$fullname[1][1].$fullname[1][2].$fullname[1][3].$fullname[2][0].$fullname[2][1].$fullname[2][2].$fullname[2][3]);
         unset($fullname[0]);
         $name['fname']=implode(" ", $fullname);
         
         $name['uname'] = str_replace(" ","",$name['uname']); //ASU: finally - remove all possible ocasional spaces
-//var_dump($name);
+
+        //check if such username could exist
+        do {
+            $tmp_student_ldb = $this->Students->find()
+                ->where(['user_name' => $name['uname']])
+                ->first();
+            if (!empty($tmp_student_ldb)) {
+                $name['uname'] = $name['uname'].'1'; 
+            }
+        } while (!empty($tmp_student_ldb));
+
         return $name;
     }
     
@@ -1068,6 +1105,17 @@ WHERE
         }
         $username = $tmpLastName."_".$tmpFname.$tmpMname;
         $username = str_replace(" ","",$username); //finally: remove all possible ocasional spaces
+
+        //check if such username could exist
+        do {
+            $tmp_student_ldb = $this->Students->find()
+                ->where(['user_name' => $name['uname']])
+                ->first();
+            if (!empty($tmp_student_ldb)) {
+                $name['uname'] = $name['uname'].'1'; 
+            }
+        } while (!empty($tmp_student_ldb));
+
         return $username;
     }
     /*
