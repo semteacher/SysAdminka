@@ -531,10 +531,13 @@ var_dump($this->request->data['file']['name']);
                 ->where(['student_id' => $student_of_contingent['STUDENTID']])
                 ->first();
             if ($student_of_contingent['STATUS']=='С'){
+//var_dump($student_of_contingent['STUDENTID']);
                 if (isset($student_ldb)){
                     $rename=0;
                     $student_of_contingent['NFIO']!=null ? $name = $this->_emplode_fi($student_of_contingent['NFIO']) : $name = $this->_emplode_fi($student_of_contingent['FIO']);
+//var_dump($student_of_contingent['STUDENTID']);
                     $data = $this->Students->get($student_ldb->id);
+
 //var_dump($student_ldb);
                     if ($student_of_contingent['DEPARTMENTID']!=$student_ldb->school_id){
                         $rename++;
@@ -633,18 +636,16 @@ var_dump($this->request->data['file']['name']);
                     if(isset($student_of_contingent['IDCODE'])){
                         $data['ipn_id']=$student_of_contingent['IDCODE'];
                     }
-                    //var_dump($data);
-                    //$savedb = $this->Students->save($data);
+//var_dump($data);
                     if ($this->Students->save($data)) {
-                    //if ($savedb) {
                         $new_student_for_email++;
                         $this->options['new_student']++;
                         $this->status=true;
-//                        $this->message[]['message']='New students: '.$this->options['new_student'];
+                        //$this->message[]['message']='New students: '.$this->options['new_student'];
                     } else {
                             $this->options['new_student_failed']++;
                             debug($data->errors());
-                            //var_dump('failed! - '.$student_of_contingent['STUDENTID']);
+//var_dump('failed! - '.$student_of_contingent['STUDENTID']);
                     }
                 }
             } else {
@@ -659,14 +660,16 @@ var_dump($this->request->data['file']['name']);
                         $rename++;
                         $data['status_id'] = 1;
                     }
-                        if($rename>0){
-
-                            if ($this->Students->save($data)) {
-                                $this->options['rename_student']++;
-                                $this->status=true;
-//                                $this->message[]['message']='Editing students: '.$this->options['rename_student'];
-                            }
-                        }                
+                    if($rename>0){
+                        if ($this->Students->save($data)) {
+                            $this->options['rename_student']++;
+                            $this->status=true;
+                            //$this->message[]['message']='Editing archive students: '.$this->options['rename_student'];
+                        } else {
+                            //$this->options['new_student_failed']++;
+                            debug($data->errors());
+                        }
+                    }                
                 }
             }
         }
@@ -724,6 +727,8 @@ var_dump($this->request->data['file']['name']);
                 );
             }
             return strtolower($transliteratedText);
+            //TODO: introduce
+            //return transliterator_transliterate ('Any-Latin; [\u0100-\u7fff] Remove; Latin-ASCII; NFD; [:Nonspacing Mark:] Remove; NFC; Lower();', $ukrainianText);
     }
 
 
@@ -738,7 +743,6 @@ var_dump($this->request->data['file']['name']);
      * implode fio -> fname, lname
      */
     private function _emplode_fi($str){
-        //if ($str[0]==' '){$str = substr($str, 1);}
         $str = trim($str); //Remove all leading and trailing spaces 
         $str = str_replace("(","",$str);
         $str = str_replace(")","",$str);
@@ -752,25 +756,52 @@ var_dump($this->request->data['file']['name']);
 
         $fullname = explode(" ", $str);
 
+        //required to be in sync with ASU procedure: fix empty names
         $name['lname']=$fullname[0];
         $name['firstname']=$fullname[1];
         $name['middlename']=$fullname[2];
         //ASU: Set Fname or Mname in place of LastName - if it not exist - to meet Google requirements
-        if (strlen($name['lname'])<2) {
-            if (strlen($name['firstname'])>2){
+        if (mb_strlen($name['lname'])<2) {
+            if (mb_strlen($name['firstname'])>2){
                 $name['lname'] = $name['firstname'];
-            } elseif (strlen($name['middlename'])>2) {
+            } elseif (mb_strlen($name['middlename'])>2) {
                 $name['lname'] = $name['middlename'];
             } else {
                 $name['lname'] = 'noLN';
             }
+//var_dump($name);
+        }
+        if (mb_strlen($name['firstname'])<2) {
+            if (mb_strlen($name['lname'])>2){
+                $name['firstname'] = mb_substr($name['lname'],0,3);
+            } elseif (mb_strlen($name['middlename'])>2) {
+                $name['firstname'] = mb_substr($name['middlename'],0,3);
+            } else {
+                $name['firstname'] = 'nFN';
+            }
+//var_dump($name);
         }
         
-        $name['uname']=$this->_create_username($fullname[0])."_".$this->_create_username($fullname[1][0].$fullname[1][1].$fullname[1][2].$fullname[1][3].$fullname[2][0].$fullname[2][1].$fullname[2][2].$fullname[2][3]);
-        unset($fullname[0]);
-        $name['fname']=implode(" ", $fullname);
-        
+        if (isset($name['middlename'])) {
+            $name['fname'] = $name['firstname'] . " " . $name['middlename'];
+            $tmpfmn = mb_substr($name['firstname'],0,3).mb_substr($name['middlename'],0,3);
+        } else {
+            $name['fname'] = $name['firstname'];
+            $tmpfmn = mb_substr($name['firstname'],0,3).mb_substr($name['lname'],0,3);
+        }
+
+        $name['uname'] = $this->_create_username($name['lname'])."_".$this->_create_username($tmpfmn);
         $name['uname'] = str_replace(" ","",$name['uname']); //ASU: finally - remove all possible ocasional spaces
+
+        //check if such username could exist
+        do {
+            $tmp_student_ldb = $this->Students->find()
+                ->where(['user_name' => $name['uname']])
+                ->first();
+            if (!empty($tmp_student_ldb)) {
+                $name['uname'] = $name['uname'].'1'; 
+            }
+        } while (!empty($tmp_student_ldb));
 //var_dump($name);
         return $name;
     }
@@ -1013,7 +1044,7 @@ WHERE
 //var_dump($tmp_student_ldb);
 //}       
         if (!isset($student_ldb)) {
-            if (strlen($tmp_student_of_asu_mkr['ST108'])>1){ // get existing user by Contingent ID
+            if (mb_strlen($tmp_student_of_asu_mkr['ST108'])>1){ // get existing user by Contingent ID
             //TODO: !!!!!!!!!!!!!!!STRONG NECESSARY TO FILL ST108 FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             $tmp_student_ldb = $this->Students->find()
                 ->where(['c_stud_id' => $tmp_student_of_asu_mkr['ST108'], 'status_id'=>$status])
@@ -1035,39 +1066,50 @@ WHERE
         $tmpFname = $this->_create_username(trim($tmpname[0]));
         $tmpMname = $this->_create_username(trim($tmpname[1]));
         $tmpLastName = $this->_create_username(trim($namearr['lname']));
-        if (strlen($tmpLastName)<2) {
-            if (strlen($tmpFname)>2){
+        if (mb_strlen($tmpLastName)<2) {
+            if (mb_strlen($tmpFname)>2){
                 $tmpLastName = $tmpFname;
-            } elseif (strlen($tmpMname)>2) {
+            } elseif (mb_strlen($tmpMname)>2) {
                 $tmpLastName = $tmpMname;
             } else {
                 $tmpLastName = 'nolastname';
             }
         }
-        if (strlen($tmpFname)<2) {
-            if (strlen($tmpFname)>2){
-                $tmpFname = substr($tmpLastName,0,3);
-            } elseif (strlen($tmpMname)>2) {
-                $tmpFname = substr($tmpMname,0,3);
+        if (mb_strlen($tmpFname)<2) {
+            if (mb_strlen($tmpFname)>2){
+                $tmpFname = mb_substr($tmpLastName,0,3);
+            } elseif (mb_strlen($tmpMname)>2) {
+                $tmpFname = mb_substr($tmpMname,0,3);
             } else {
                 $tmpFname = 'nfn';
             }
         } else {
-            $tmpFname = substr($tmpFname,0,3);
+            $tmpFname = mb_substr($tmpFname,0,3);
         }
-        if (strlen($tmpMname)<2) {
-            if (strlen($tmpFname)>2){
-                $tmpMname = substr($tmpLastName,0,3);
-            } elseif (strlen($tmpFname)>2) {
-                $tmpMname = substr($tmpFname,0,3);
+        if (mb_strlen($tmpMname)<2) {
+            if (mb_strlen($tmpFname)>2){
+                $tmpMname = mb_substr($tmpLastName,0,3);
+            } elseif (mb_strlen($tmpFname)>2) {
+                $tmpMname = mb_substr($tmpFname,0,3);
             } else {
                 $tmpMname = 'nmn';
             }
         } else {
-            $tmpMname = substr($tmpMname,0,3);
+            $tmpMname = mb_substr($tmpMname,0,3);
         }
         $username = $tmpLastName."_".$tmpFname.$tmpMname;
         $username = str_replace(" ","",$username); //finally: remove all possible ocasional spaces
+
+        //check if such username could exist
+        do {
+            $tmp_student_ldb = $this->Students->find()
+                ->where(['user_name' => $name['uname']])
+                ->first();
+            if (!empty($tmp_student_ldb)) {
+                $name['uname'] = $name['uname'].'1'; 
+            }
+        } while (!empty($tmp_student_ldb));
+
         return $username;
     }
     /*
@@ -1622,8 +1664,7 @@ WHERE
     /*
      * clean-up string (especially - for names clean-up)
      */
-    private function _name_cleanup($str){
-        //if ($str[0]==' '){$str = substr($str, 1);}  //TODO: Remove all leading and trailing spaces 
+    private function _name_cleanup($str){ 
         $str = trim($str);
         $str = str_replace("(","",$str);
         $str = str_replace(")","",$str);
