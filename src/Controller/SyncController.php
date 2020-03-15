@@ -1352,66 +1352,74 @@ WHERE
 //var_dump("asu_IPN (if exist)=".$student_of_asu_mkr['ST15']);
 //var_dump("asu_last_name=".$student_of_asu_mkr['ST2']);
 //var_dump("----------------------------------");
+          if (!empty($student_of_asu_mkr['PNSP1'])&&!empty($student_of_asu_mkr['SP1'])) {
+            
             $txtreport .= "START-asu_last_name=".$student_of_asu_mkr['ST2']."\r\n";
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
             //ZERO check - against manually entered ASU MKR IDs:
-            unset($students_ldb);
-                $students_ldb = $this->Students->find()
-                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']]);
-            if(isset($students_ldb)&&($students_ldb->count()>0)){
-                unset($student_ldb);
-                foreach($students_ldb as $student_ldb){
-                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id.", status=".$student_ldb->status_id."\r\n";
-                    $singleinstance++;
-                    $asuidingaps++;
-                }
-            } else {
+//            unset($students_ldb);
+//                $students_ldb = $this->Students->find()
+//                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']]);
+//            if(isset($students_ldb)&&($students_ldb->count()>0)){
+//                unset($student_ldb);
+//                foreach($students_ldb as $student_ldb){
+//                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id.", status=".$student_ldb->status_id."\r\n";
+//                    $singleinstance++;
+//                    $asuidingaps++;
+//                }
+//            } else {
                 //First check - is it kontingent ID existing
-                unset($students_ldb);
-                $students_ldb = $this->Students->find()
-                    ->where(['student_id' => $student_of_asu_mkr['ST108']]);
-                if(isset($students_ldb)&&($students_ldb->count()>0)){
-                    unset($student_ldb);
-                    foreach($students_ldb as $student_ldb){
-                        $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id.", status=".$student_ldb->status_id."\r\n";
-                        $singleinstance++;
-                        $contidinasu++;
-                        //UPDATE LDB:
-                        $data = $this->Students->get($student_ldb->id);
-                        $data['asumkr_id']=$student_of_asu_mkr['ST1'];
-                        //$data['student_id']=$student_of_asu_mkr['ST1'];//Disable - until GAPS break
-                        if ($this->Students->save($data)) {
-                            $LDBupdateOK++;
-                            $txtreport .= "RESULT -found-gaps-by-contid1(isset), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
-                        } else {
-                            $LDBupdateFail++;
-                            $txtreport .= "RESULT -found-gaps-by-contid1(isset), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
-                        }
-                    }
-                } else {
-                    //Second check - is it IPN ID existing
+                if (!empty(trim($student_of_asu_mkr['ST108']))) {
                     unset($students_ldb);
                     $students_ldb = $this->Students->find()
-                        ->where(['ipn_id' => $student_of_asu_mkr['ST15']]);
+                        ->where(['student_id' => trim($student_of_asu_mkr['ST108'])]);
                     if(isset($students_ldb)&&($students_ldb->count()>0)){
                         unset($student_ldb);
                         foreach($students_ldb as $student_ldb){
-                            $txtreport .= "RESULT -found-gaps-by-ionid1(isset)=".$student_ldb->ipn_id.", status=".$student_ldb->status_id."\r\n";
+                            $txtreport .= "RESULT -found-gaps-by-contid1(isset)=".$student_ldb->student_id.", status=".$student_ldb->status_id." (count".$students_ldb->count().") \r\n";
                             $singleinstance++;
-                            $ipnidinasu++;
+                            $contidinasu++;
                             //UPDATE LDB:
                             $data = $this->Students->get($student_ldb->id);
                             $data['asumkr_id']=$student_of_asu_mkr['ST1'];
                             //$data['student_id']=$student_of_asu_mkr['ST1'];//Disable - until GAPS break
                             if ($this->Students->save($data)) {
                                 $LDBupdateOK++;
-                                $txtreport .= "RESULT -found-gaps-by-ipnid1(isset), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                $txtreport .= "RESULT -found-gaps-by-contid1(isset), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
                             } else {
                                 $LDBupdateFail++;
-                                $txtreport .= "RESULT -found-gaps-by-ipnid1(isset), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                $txtreport .= "RESULT -found-gaps-by-contid1(isset), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
                             }
-                        }                        
+                        }
+                    }
+                } else {
+                    //Second check - is it IPN ID existing
+                    //if (!empty($student_of_asu_mkr['ST15'])) {
+                    if (mb_strlen(trim($student_of_asu_mkr['ST15']))>5) {
+                        //if (mb_strlen($student_of_asu_mkr['ST15'])>3)
+                        unset($students_ldb);
+                        $students_ldb = $this->Students->find()
+                            ->where(['ipn_id' => trim($student_of_asu_mkr['ST15'])]);
+                        if(isset($students_ldb)&&($students_ldb->count()>0)){
+                            unset($student_ldb);
+                            foreach($students_ldb as $student_ldb){
+                                $txtreport .= "RESULT -found-gaps-by-ionid1(isset)=".$student_ldb->ipn_id.", status=".$student_ldb->status_id."\r\n";
+                                $singleinstance++;
+                                $ipnidinasu++;
+                                //UPDATE LDB:
+                                $data = $this->Students->get($student_ldb->id);
+                                $data['asumkr_id']=$student_of_asu_mkr['ST1'];
+                                //$data['student_id']=$student_of_asu_mkr['ST1'];//Disable - until GAPS break
+                                if ($this->Students->save($data)) {
+                                    $LDBupdateOK++;
+                                    $txtreport .= "RESULT -found-gaps-by-ipnid1(isset), write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                } else {
+                                    $LDBupdateFail++;
+                                    $txtreport .= "RESULT -found-gaps-by-ipnid1(isset), FAIL to write ASU MKR ID=".$student_of_asu_mkr['ST1']." INSTEAD of student_id \r\n";
+                                }
+                            }
+                        }
                     } else {
                         // clean-up names - LDB has cleaned values!
                         if ($student_of_asu_mkr['ST32']==804){ //ukrainians
@@ -1494,7 +1502,8 @@ WHERE
                         }
                     }
                 }
-            }
+//            }
+          }
         }
 
         //prepare total repor message
