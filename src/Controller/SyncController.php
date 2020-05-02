@@ -1358,17 +1358,17 @@ WHERE
             $txtreport .= "asu_ID=".$student_of_asu_mkr['ST1']."\r\n";
             $txtreport .= "asu_contID (if exist)=".$student_of_asu_mkr['ST108']."\r\n";
             //ZERO check - against manually entered ASU MKR IDs:
-//            unset($students_ldb);
-//                $students_ldb = $this->Students->find()
-//                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']]);
-//            if(isset($students_ldb)&&($students_ldb->count()>0)){
-//                unset($student_ldb);
-//                foreach($students_ldb as $student_ldb){
-//                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id.", status=".$student_ldb->status_id."\r\n";
-//                    $singleinstance++;
-//                    $asuidingaps++;
-//                }
-//            } else {
+            unset($students_ldb);
+                $students_ldb = $this->Students->find()
+                    ->where(['asumkr_id' => $student_of_asu_mkr['ST1']]);
+            if(isset($students_ldb)&&($students_ldb->count()>0)){
+                unset($student_ldb);
+                foreach($students_ldb as $student_ldb){
+                    $txtreport .= "RESULT -found-gaps-by-asumkrid1(isset)=".$student_ldb->asumkr_id.", status=".$student_ldb->status_id."\r\n";
+                    $singleinstance++;
+                    $asuidingaps++;
+                }
+            } else {
                 //First check - is it kontingent ID existing
                 if (!empty(trim($student_of_asu_mkr['ST108']))) {
                     unset($students_ldb);
@@ -1452,7 +1452,7 @@ WHERE
                                 $notfound++;
                                 $notfound_pos[] = $student_of_asu_mkr;
                                 $txtreport .= "RESULT - NOT FOUND!\r\n";
-                            } elseif(count($found_pos)==1) { // found - SINGLE OCCYURENCE - OK!
+                            } elseif(count($found_pos)==1) { // found - SINGLE OCCURENCE - OK!
                                 $singleinstance++;
                                 $found_keys = array_keys($found_pos);
                                 $asu_mkr_update_sql = "UPDATE ST SET ST.ST108=".$found_pos[$found_keys[0]]." WHERE ST.ST1=".$student_of_asu_mkr['ST1'].";";
@@ -1502,7 +1502,7 @@ WHERE
                         }
                     }
                 }
-//            }
+            }
           }
         }
 
