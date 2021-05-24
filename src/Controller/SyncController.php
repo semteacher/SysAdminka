@@ -848,6 +848,7 @@ select
     st.st76, 
     st.st144,
     st.st108,
+    st.st200,
     gr.gr3,
     std.std7,
     std.std11,
@@ -881,6 +882,12 @@ FROM p
 WHERE
     p.p7='".$ipn."'   
     ");    
+    }
+
+    private function _get_asu_mkr_student_by_id($stid){
+       return $this->asu_mkr->gets("
+            SELECT * FROM st WHERE st1='".$stid."'
+        ");
     }
     
     private function _get_asu_mkr_portal_user($username, $usertype=0){
@@ -1522,6 +1529,7 @@ WHERE
         //$this->_get_asu_mkr_portal_users();
         $newportaluser = 0;
         $dbwriteerrors = 0;
+        $pewriteerrors = 0;
         $missed = 0;
         $students_ldb = $this->Students->find('all');
         foreach($students_ldb as $student_ldb){
@@ -1536,6 +1544,10 @@ WHERE
     //var_dump($this->_get_asu_mkr_portal_user($student_ldb->user_name, 0));
                 if (is_null($this->asu_mkr_portal_users)&&is_null($this->asu_mkr_portal_users_email)&&!is_null($student_ldb->asumkr_id)){
     //var_dump($student_ldb);
+                    unset($sau_mkr_student);
+                    //$sau_mkr_student = $this->_get_asu_mkr_student_by_id($student_ldb->asumkr_id);
+                    //var_dump($sau_mkr_student);
+                    //var_dump($sau_mkr_student[1]['ST200']);
                     $new_id = $this->asu_mkr->get_newID('GEN_USERS', 1);
                     if ($new_id){
     //var_dump($new_id);                
@@ -1559,6 +1571,17 @@ WHERE
                         $results = $this->asu_mkr->sets($asu_mkr_insert_sql);  //disable during debug
                         if ($results){
                             $newportaluser++;
+                            // 2020 - yii2 portal - fix for person model usage
+                            $sau_mkr_student = $this->_get_asu_mkr_student_by_id($student_ldb->asumkr_id);
+                            if (!empty($sau_mkr_student[1]['ST200'])) {
+    //var_dump($sau_mkr_student[1]['ST200']);
+    //var_dump($new_id);
+                                $asu_mkr_update_sql = "UPDATE PE SET PE.PE38=".$new_id." WHERE PE.PE1=".$sau_mkr_student[1]['ST200'].";";
+                                $results = $this->asu_mkr->sets($asu_mkr_update_sql);
+                                if (!$results) {
+                                    $pewriteerrors++;
+                                }
+                            }
                         } else {
                             $dbwriteerrors++;
                         }
@@ -1569,7 +1592,7 @@ WHERE
                 }
             }
         }
-        $this->message[]['message']= $newportaluser.' new portal users has been created! '.$dbwriteerrors.' DB write errors. '.$missed.' records missed';
+        $this->message[]['message']= $newportaluser.' new portal users has been created! '.$pewriteerrors.' PE_model update errors. '.$dbwriteerrors.' DB write errors. '.$missed.' records missed';
     }
     
     private function _fix_asumkr_portal_useremails (){
