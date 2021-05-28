@@ -736,7 +736,8 @@ var_dump($this->request->data['file']['name']);
      * generate pass
      */
     private function _generate_pass(){
-        return rand(10000000,99999999);
+        //return rand(10000000,99999999);
+        return intval(88888888);
     }
 
     /*
