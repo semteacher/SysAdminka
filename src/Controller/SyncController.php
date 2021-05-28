@@ -644,7 +644,7 @@ var_dump($this->request->data['file']['name']);
                         //$this->message[]['message']='New students: '.$this->options['new_student'];
                     } else {
                             $this->options['new_student_failed']++;
-                            debug($data->errors());
+                            //debug($data->errors());
 //var_dump('failed! - '.$student_of_contingent['STUDENTID']);
                     }
                 }
@@ -666,8 +666,8 @@ var_dump($this->request->data['file']['name']);
                             $this->status=true;
                             //$this->message[]['message']='Editing archive students: '.$this->options['rename_student'];
                         } else {
-                            //$this->options['new_student_failed']++;
-                            debug($data->errors());
+                            $this->options['new_student_failed']++;
+                            //debug($data->errors());
                         }
                     }                
                 }
