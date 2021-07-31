@@ -161,7 +161,7 @@
                             <div class="thumbnail sync">
                                 <label>
                                     <?= $this->Html->image("SyncUser.png", [
-                                        "alt" => "Sync",
+                                        "alt" => "Fill ASUMKR_ID -> GAPS LDB",
                                         "class"=>"col-xs-12 hidden-xs "
                                     ]);?>
                                 <div class="caption">
@@ -180,26 +180,7 @@
                             <div class="thumbnail sync">
                                 <label>
                                     <?= $this->Html->image("SyncUser.png", [
-                                        "alt" => "Sync",
-                                        "class"=>"col-xs-12 hidden-xs "
-                                    ]);?>
-                                <div class="caption">
-                                    <h3 class="">Create ASU MKR portal NEW users</h3>
-                                   <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" name="init_asumkr_portal_users" style="width:50px;height: 40px;">
-                                        </label>
-                                    </div>
-                                </div>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                            <div class="thumbnail sync">
-                                <label>
-                                    <?= $this->Html->image("SyncUser.png", [
-                                        "alt" => "Sync",
+                                        "alt" => "Fix non-tdmu ASU MKR portal users email",
                                         "class"=>"col-xs-12 hidden-xs "
                                     ]);?>
                                 <div class="caption">
@@ -214,6 +195,25 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+                                    <?= $this->Html->image("SyncUser.png", [
+                                        "alt" => "Fix ASU MKR portal users not linked to Moodle users",
+                                        "class"=>"col-xs-12 hidden-xs "
+                                    ]);?>
+                                <div class="caption">
+                                    <h3 class="">Fix ASU MKR portal users not linked to Moodle users</h3>
+                                   <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="fix_asumkrusers_to_moodleusers" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
                 </div>        
             </div>
             <div class="form-group">
@@ -221,6 +221,25 @@
                     <legend><?= __('ASU MKR Sync options (postponned, do not use)') ?></legend>            
                 </div>
             </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail sync">
+                                <label>
+                                    <?= $this->Html->image("SyncUser.png", [
+                                        "alt" => "Create ASU MKR portal NEW users",
+                                        "class"=>"col-xs-12 hidden-xs "
+                                    ]);?>
+                                <div class="caption">
+                                    <h3 class="">Create ASU MKR portal NEW users</h3>
+                                   <p class="alert alert-danger">Time of synchronization can be more than 1 minute</p>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="init_asumkr_portal_users" style="width:50px;height: 40px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                </label>
+                            </div>
+                        </div>
             <div class="form-group">
                 <div class="row">
                         <div class="col-sm-6 col-md-3">

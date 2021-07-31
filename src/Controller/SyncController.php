@@ -11,6 +11,7 @@ include_once ('Component/Google_Api/src/Google/Client.php');
 include_once ('Component/Google_Api/src/Google/Sevice/Oauth2.php');
 include_once ('Component/Google_Api/src/Google/Auth/AssertionCredentials.php');
 include_once('Component/CsvComponent.php');
+include_once('Component/curl.php');
 
 use class_ibase_fb;
 use class_ibase_fb_asu_mkr;
@@ -21,6 +22,7 @@ use Google_Service_Oauth2;
 use CsvComponent;
 use Cake\Network\Email\Email;
 use Cake\Datasource\ConnectionManager;
+use curl;
 
 /**
  * Students Controller
@@ -356,6 +358,9 @@ var_dump($this->request->data['file']['name']);
             }
             if ($this->request->data['fix_asumkr_portal_useremails']==on){
                 $this->_fix_asumkr_portal_useremails();
+            }
+            if ($this->request->data['fix_asumkrusers_to_moodleusers']==on){
+                $this->_fix_asumkrusers_to_moodleusers();
             }
             //----------ASU MKR actions end------------------
             
@@ -1764,5 +1769,57 @@ WHERE
         return $key;
 		//$this->saveAttributes(array('u12'=>$key));
 	}
-    
+
+    private function _fix_asumkrusers_to_moodleusers() {
+        $newmoodleusers = 0;
+        $dbwriteerrors = 0;
+        $multipleinstances = 0;
+        $missed = 0;
+        $txtreport = '';
+
+        $asu_mkr_getusers_sql = "select u2, u4, u6 from users where users.u6 not in (select STDIST1 from STDIST ) and users.u5=0 and position ('@tdmu.edu.ua', users.u4) >1;";
+        $asuusers = $this->asu_mkr->gets($asu_mkr_getusers_sql);
+        if ($asuusers) {
+            // 2- get Moodle users be emails and write Moodle ID into ASU
+            $token = (file_get_contents(ROOT.DS."webroot".DS."Google_key".DS."moodle.token"));
+            $domainname = 'https://moodle.tdmu.edu.ua';
+            $restformat = 'json';
+            //require_once('./curl.php');
+            $curl = new curl;
+            //if rest format == 'xml', then we do not add the param for backward compatibility with Moodle < 2.2
+            $restformat = ($restformat == 'json')?'&moodlewsrestformat=' . $restformat:'';
+            $functionname = 'core_user_get_users_by_field';
+            $serverurl = $domainname . '/webservice/rest/server.php'. '?wstoken=' . $token . '&wsfunction='.$functionname;
+            $txtreport .= 'Found '.sizeof($asuusers).' ASU portal users without Moodle links. Search Moodle DB:\r\n';
+            foreach ($asuusers as $user) {
+                // get Moodle user be email
+                $txtreport .= 'ASU st1= '.$user['U6'].', email= '.$user['U4'];
+                $params = array('field'=>'email','values'=>[$user['U4']]);
+                $resp = $curl->post($serverurl . $restformat, $params);
+                $resparr = json_decode($resp, true);
+                //print_r($resparr);
+                if (isset($resparr[0])){
+                    $txtreport .= ' FOUND in Moodle, ID='.$resparr[0]['id'];
+                    //UPDATE ASU DB - insert students' portal users data of STDIST records with Moodle ID
+                    $insertsql = "INSERT INTO STDIST (STDIST1, STDIST2, STDIST3) VALUES (".$user['U6'].", '".$resparr[0]['email']."', ".$resparr[0]['id'].");";
+                    $results = $this->asu_mkr->sets($insertsql);
+                    if ($results){
+                        $newmoodleusers++;
+                        $txtreport .= ' ASU update - OK!';
+                    } else {
+                        $dbwriteerrors++;
+                        $txtreport .= ' ASU update - FAILED!';
+                    }                      
+                } else {
+                    $txtreport .= ' NOT found in Moodle!';
+                }
+                $txtreport .= "\r\n";
+            }            
+        }
+        $totalresultmessage = $newmoodleusers.' ASU portal users has been linked to Moodle! (out of '.sizeof($asuusers).' totally without links in ASU) '.$dbwriteerrors.' ASU DB write errors. '.$missed.' records skipped';
+        $txtreport .= "\r\n".$totalresultmessage;
+        //save report file
+        file_put_contents (ROOT.DS."webroot".DS."files".DS."asumkrusers2moodleusers_report.txt", $txtreport);
+        $this->message[]['message']= $totalresultmessage;
+    }
 }
