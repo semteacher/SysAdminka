@@ -1773,7 +1773,7 @@ WHERE
     private function _fix_asumkrusers_to_moodleusers() {
         $newmoodleusers = 0;
         $dbwriteerrors = 0;
-        $multipleinstances = 0;
+        $skipped = 0;
         $missed = 0;
         $txtreport = '';
 
@@ -1784,42 +1784,52 @@ WHERE
             $token = (file_get_contents(ROOT.DS."webroot".DS."Google_key".DS."moodle.token"));
             $domainname = 'https://moodle.tdmu.edu.ua';
             $restformat = 'json';
-            //require_once('./curl.php');
             $curl = new curl;
             //if rest format == 'xml', then we do not add the param for backward compatibility with Moodle < 2.2
             $restformat = ($restformat == 'json')?'&moodlewsrestformat=' . $restformat:'';
             $functionname = 'core_user_get_users_by_field';
             $serverurl = $domainname . '/webservice/rest/server.php'. '?wstoken=' . $token . '&wsfunction='.$functionname;
-            $txtreport .= 'Found '.sizeof($asuusers).' ASU portal users without Moodle links. Search Moodle DB:\r\n';
+            $txtreport .= 'Found '.sizeof($asuusers).' ASU portal users without Moodle links. Search Moodle DB:';
             foreach ($asuusers as $user) {
                 // get Moodle user be email
+                $txtreport .= "\r\n";
                 $txtreport .= 'ASU st1= '.$user['U6'].', email= '.$user['U4'];
-                $params = array('field'=>'email','values'=>[$user['U4']]);
+                $params = array('field'=>'email','values'=>[strtolower($user['U4'])]);
                 $resp = $curl->post($serverurl . $restformat, $params);
                 $resparr = json_decode($resp, true);
                 //print_r($resparr);
                 if (isset($resparr[0])){
-                    $txtreport .= ' FOUND in Moodle, ID='.$resparr[0]['id'];
-                    //UPDATE ASU DB - insert students' portal users data of STDIST records with Moodle ID
-                    $insertsql = "INSERT INTO STDIST (STDIST1, STDIST2, STDIST3) VALUES (".$user['U6'].", '".$resparr[0]['email']."', ".$resparr[0]['id'].");";
-                    $results = $this->asu_mkr->sets($insertsql);
-                    if ($results){
-                        $newmoodleusers++;
-                        $txtreport .= ' ASU update - OK!';
+                    unset($results);
+                    // additional check - is email registered under another ASU ID ?
+                    $checksql = "select STDIST1, STDIST2, STDIST3 from STDIST where STDIST2='".$resparr[0]['email']."';";
+                    $results = $this->asu_mkr->gets($checksql);
+                    if ($results) {
+                        $txtreport .= ' FOUND in Moodle with DIFFERENT IDs: ASU ID='.$results[1]['STDIST1'].' Moodle ID='.$results[1]['STDIST3'].' - SKIPPED!';
+                        $skipped++;
                     } else {
-                        $dbwriteerrors++;
-                        $txtreport .= ' ASU update - FAILED!';
-                    }                      
+                        unset($results);
+                        $txtreport .= ' FOUND in Moodle, ID='.$resparr[0]['id'];
+                        //UPDATE ASU DB - insert students' portal users data of STDIST records with Moodle ID
+                        $insertsql = "INSERT INTO STDIST (STDIST1, STDIST2, STDIST3) VALUES (".$user['U6'].", '".$resparr[0]['email']."', ".$resparr[0]['id'].");";
+                        $results = $this->asu_mkr->sets($insertsql);
+                        if ($results){
+                            $newmoodleusers++;
+                            $txtreport .= ' ASU update - OK!';
+                        } else {
+                            $dbwriteerrors++;
+                            $txtreport .= ' ASU update - FAILED!';
+                        }                        
+                    }
                 } else {
                     $txtreport .= ' NOT found in Moodle!';
+                    $missed++;
                 }
-                $txtreport .= "\r\n";
             }            
         }
-        $totalresultmessage = $newmoodleusers.' ASU portal users has been linked to Moodle! (out of '.sizeof($asuusers).' totally without links in ASU) '.$dbwriteerrors.' ASU DB write errors. '.$missed.' records skipped';
+        $totalresultmessage = $newmoodleusers.' ASU portal users has been linked to Moodle! (out of '.sizeof($asuusers).' totally without links in ASU) '.$dbwriteerrors.' ASU DB write errors. '.$missed.' records NOT FOUND. '.$skipped.' records skipped (registered with different IDs - see log file)';
         $txtreport .= "\r\n".$totalresultmessage;
         //save report file
-        file_put_contents (ROOT.DS."webroot".DS."files".DS."asumkrusers2moodleusers_report.txt", $txtreport);
+        file_put_contents (ROOT.DS."webroot".DS."files".DS."asumkrusers2moodleusers_report-".date('Y-m-d_H-i',time()).".txt", $txtreport);
         $this->message[]['message']= $totalresultmessage;
     }
 }
