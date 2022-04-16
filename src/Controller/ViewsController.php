@@ -125,7 +125,6 @@ class ViewsController extends AppController
             $Csv = new CsvComponent($this->options);
             $data = $this->Students->find()->contain(['Schools', 'Specials'])->where([ //! For loading associations!
                         ' Students.school_id = '.$this->request->data['school_id'].
-                        ' AND Students.special_id = '.$this->request->data['special_id'].
                         ' AND status_id = '.$this->request->data['status_id']]);
             //$data= $data->contain(['Schools', 'Specials']); //! For loading associations!
             $data= $data->select([
@@ -138,7 +137,14 @@ class ViewsController extends AppController
                 ]),
                 'internal_id'=>'student_id',
                 'department' => 'Schools.name',
-                'group_title' => 'Specials.name',
+                //'group_title' => 'Specials.name',
+                'group_title' => $data->func()->concat([
+                    'Specials.name' => 'literal',
+                    ', ',
+                    'Schools.name' => 'literal',
+                    ', Students'
+                ]),
+
             ])->contain([           //! For loading associations!
                 'Schools' => [
                     'fields' => ['Schools.name']
@@ -149,8 +155,8 @@ class ViewsController extends AppController
             ]);
             $data =json_decode(json_encode($data), true);//var_dump($data);die();
             if (count($data)>0){
-                $Csv->exportCsv(ROOT.DS."webroot".DS."files/usr_".$_SESSION['Auth']['User']['id']."-sch_".$this->request->data['school_id']."-spec_".$this->request->data['special_id'].".csv", array($data), $this->options);
-                return $this->redirect($_SERVER['domain']."/files/usr_".$_SESSION['Auth']['User']['id']."-sch_".$this->request->data['school_id']."-spec_".$this->request->data['special_id'].".csv");
+                $Csv->exportCsv(ROOT.DS."webroot".DS."files/usr_".$_SESSION['Auth']['User']['id']."-sch_".$this->request->data['school_id'].".csv", array($data), $this->options);
+                return $this->redirect($_SERVER['domain']."/files/usr_".$_SESSION['Auth']['User']['id']."-sch_".$this->request->data['school_id'].".csv");
             }else{
                 $this->Flash->error(__('No users'));
             }
