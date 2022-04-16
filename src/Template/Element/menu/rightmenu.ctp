@@ -45,6 +45,9 @@
                 <li>
                     <a href="/Views/photos"><i class="fa fa-fw fa-edit"></i>All photo of students</a>
                 </li>
+                <li>
+                    <a href="/Views/lecturio"><i class="fa fa-fw fa-edit"></i>For Lecturio template</a>
+                </li>
             </ul>
         </li>
         <li>

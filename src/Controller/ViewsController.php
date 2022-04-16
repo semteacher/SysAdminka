@@ -118,4 +118,44 @@ class ViewsController extends AppController
             $this->redirect($_SERVER['domain']."/files/temp_archive/photos.zip");
         }
     }
+
+    public function lecturio(){
+        $this->set('title','Export for Lecturio');
+        if ($this->request->is('post')) {
+            $Csv = new CsvComponent($this->options);
+            $data = $this->Students->find()->contain(['Schools', 'Specials'])->where([ //! For loading associations!
+                        ' Students.school_id = '.$this->request->data['school_id'].
+                        ' AND Students.special_id = '.$this->request->data['special_id'].
+                        ' AND status_id = '.$this->request->data['status_id']]);
+            //$data= $data->contain(['Schools', 'Specials']); //! For loading associations!
+            $data= $data->select([
+                'first_name'=>'first_name',
+                'last_name'=>'last_name',
+                'email' => $data->func()->concat([
+                    'user_name' => 'literal',
+                    '@',
+                    'tdmu.edu.ua'
+                ]),
+                'internal_id'=>'student_id',
+                'department' => 'Schools.name',
+                'group_title' => 'Specials.name',
+            ])->contain([           //! For loading associations!
+                'Schools' => [
+                    'fields' => ['Schools.name']
+                ],
+                'Specials' => [
+                    'fields' => ['Specials.name']
+                ]                
+            ]);
+            $data =json_decode(json_encode($data), true);//var_dump($data);die();
+            if (count($data)>0){
+                $Csv->exportCsv(ROOT.DS."webroot".DS."files/usr_".$_SESSION['Auth']['User']['id']."-sch_".$this->request->data['school_id']."-spec_".$this->request->data['special_id'].".csv", array($data), $this->options);
+                return $this->redirect($_SERVER['domain']."/files/usr_".$_SESSION['Auth']['User']['id']."-sch_".$this->request->data['school_id']."-spec_".$this->request->data['special_id'].".csv");
+            }else{
+                $this->Flash->error(__('No users'));
+            }
+
+        }
+    }
+
 }
