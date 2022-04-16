@@ -17,7 +17,7 @@ use Cake\Log\Log;
 use Cake\Routing\DispatcherFactory;
 use Cake\Routing\Router;
 use DebugKit\Routing\Filter\DebugBarFilter;
-use \PDO;
+//use \PDO;
 
 $debugBar = new DebugBarFilter(EventManager::instance(), (array)Configure::read('DebugKit'));
 
@@ -26,7 +26,7 @@ if (!$debugBar->isEnabled() || php_sapi_name() === 'cli') {
 }
 
 $hasDebugKitConfig = ConnectionManager::config('debug_kit');
-if (!$hasDebugKitConfig && !in_array('sqlite', PDO::getAvailableDrivers())) {
+if (!$hasDebugKitConfig && !in_array('sqlite', \PDO::getAvailableDrivers())) {
     $msg = 'DebugKit not enabled. You need to either install pdo_sqlite, ' .
         'or define the "debug_kit" connection name.';
     Log::warning($msg);
