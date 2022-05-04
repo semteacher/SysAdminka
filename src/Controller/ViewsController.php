@@ -136,15 +136,13 @@ class ViewsController extends AppController
                     'tdmu.edu.ua'
                 ]),
                 'internal_id'=>'student_id',
-                'department' => 'Schools.name',
-                //'group_title' => 'Specials.name',
                 'group_title' => $data->func()->concat([
                     'Specials.name' => 'literal',
                     ', ',
                     'Schools.name' => 'literal',
                     ', Students'
                 ]),
-
+                'department' => 'Schools.name',
             ])->contain([           //! For loading associations!
                 'Schools' => [
                     'fields' => ['Schools.name']
