@@ -158,13 +158,23 @@ class ViewsController extends AppController
                     'tdmu.edu.ua'
                 ]),
                 'internal_id'=>'student_id',
+                'supervisor_email'=>'""',
+                'gender'=>'""',
+                'date_of_birth'=>'""',
                 'group_title' => $data->func()->concat([
                     'Specials.name' => 'literal',
                     ', ',
                     'Schools.name' => 'literal',
                     ', Students'
                 ]),
+                'role'=>'""',
+                'region'=>'""',
+                'city'=>'""',
+                'access_until_date'=>'""',
+                '"1.5x_time_accommodation"'=>'""',
+                'phone_number'=>'""',
                 'department' => 'Schools.name',
+                'efn'=>'""',
             ])->contain([           //! For loading associations!
                 'Schools' => [
                     'fields' => ['Schools.name']
