@@ -122,10 +122,32 @@ class ViewsController extends AppController
     public function lecturio(){
         $this->set('title','Export for Lecturio');
         if ($this->request->is('post')) {
+            switch ($this->request->data['grade_level']) {
+                case '1':
+                    $grade_level= " AND grade_level IN (1,2)";
+                    break;
+                case '2':
+                    $grade_level= " AND grade_level IN (3,4)";
+                    break;
+                case '3':
+                    $grade_level= " AND grade_level IN (5,6)";
+                    break;
+                case '4':
+                    $grade_level= " AND grade_level IN (7,8)";
+                    break;
+                case '5':
+                    $grade_level= " AND grade_level IN (9,10)";
+                    break;
+                case '6':
+                    $grade_level= " AND grade_level IN (11,12)";
+                    break;
+                default:
+                    $grade_level= "";
+            }
             $Csv = new CsvComponent($this->options);
             $data = $this->Students->find()->contain(['Schools', 'Specials'])->where([ //! For loading associations!
                         ' Students.school_id = '.$this->request->data['school_id'].
-                        ' AND status_id = '.$this->request->data['status_id']]);
+                        ' AND status_id = '.$this->request->data['status_id'].$grade_level]);
             //$data= $data->contain(['Schools', 'Specials']); //! For loading associations!
             $data= $data->select([
                 'first_name'=>'first_name',

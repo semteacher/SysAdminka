@@ -5,6 +5,15 @@
         <?php
         echo $this->Form->input('school_id', ['options' => $schools,'class'=>'form-control']);
         echo $this->Form->input('status_id',['options' => $status,'class'=>'form-control']);
+        echo $this->Form->input('grade_level',['options' =>[
+            '0' => 'All',
+            '1' => '1',
+            '2' => '2',
+            '3' => '3',
+            '4' => '4',
+            '5' => '5',
+            '6' => '6'
+        ],'class'=>'form-control','label'=>'Year of study']);
         ?>
     </fieldset>
     <br/>
