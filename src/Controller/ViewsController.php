@@ -70,7 +70,7 @@ class ViewsController extends AppController
                 ],
                 'Specials' => [
                     'fields' => ['Specials.name']
-                ]                
+                ]
             ]);
             $data =json_decode(json_encode($data), true);
             if (count($data)>0){
@@ -181,12 +181,81 @@ class ViewsController extends AppController
                 ],
                 'Specials' => [
                     'fields' => ['Specials.name']
-                ]                
+                ]
             ]);
             $data =json_decode(json_encode($data), true);//var_dump($data);die();
             if (count($data)>0){
                 $Csv->exportCsv(ROOT.DS."webroot".DS."files/usr_".$_SESSION['Auth']['User']['id']."-sch_".$this->request->data['school_id'].".csv", array($data), $this->options);
                 return $this->redirect($_SERVER['domain']."/files/usr_".$_SESSION['Auth']['User']['id']."-sch_".$this->request->data['school_id'].".csv");
+            }else{
+                $this->Flash->error(__('No users'));
+            }
+
+        }
+    }
+
+    public function helsi(){
+        $this->set('title','Export for Helsi');
+        if ($this->request->is('post')) {
+            $Csv = new CsvComponent($this->options);
+            $data = $this->Students->find()->contain(['Schools', 'Specials'])->where([ //! For loading associations!
+                        ' Students.school_id = '.$this->request->data['school_id'].
+                        ' AND Students.special_id = '.$this->request->data['special_id'].
+                        ' AND grade_level = '.$this->request->data['grade_level'].
+                        ' AND status_id = '.$this->request->data['status_id']]);
+            //$data= $data->contain(['Schools', 'Specials']); //! For loading associations!
+            $data= $data->select([
+                'email' => $data->func()->concat([
+                    'user_name' => 'literal',
+                    '@',
+                    'tdmu.edu.ua'
+                ]),
+                '"Ідентифікаційний код"' => 'student_id',
+                '"Прізвище"'=>'last_name',
+                '"Ім\'я По-батькові"'=>'first_name',
+                '"Стать"'=>'"Чоловіча"',
+                '"Дата народження"'=>'"05.05.1990"',
+                '"Телефон мобільний"' =>'"0501111112"',
+                '"Серія паспорта"' =>'"МС"',
+                '"Номер паспорта"' =>'"123457"',
+                '"Дата видачі паспорта"' =>'"05.05.2010"',
+                '"Тип мед. персоналу"' =>'"лікарі"',
+                '"Ким виданий"' =>'"РВ ДМУ УМВС України в Тернопільській області"',
+                '"Навчальний заклад"' =>'"ТНМУ"',
+                '"Вид документу"' =>'"диплом"',
+                '"Серія документу"' =>'"СЛ"',
+                '"Номер документу"' =>'"353464"',
+                '"Дата видачі документу"' =>'"06.06.2020"',
+                '"Спеціальність по диплому"' =>'"лікувальна справа"',
+                '"Кваліфікація по диплому"' =>'"лікар"',
+                '"Категорія"' =>'"Вища"',
+                '"Спеціальність (атестація)"' =>'"сімейна медицина"',
+                '"Номер наказу"' =>'"111-1"',
+                '"Дата наказу"' =>'"07.07.2020"',
+                '"Видавник наказу"' =>'"Департамент ОЗ Тенр. ОДА"',
+                '"Дата атестації"' =>'"08.08.2020"',
+                '"Термін атестації по:"' =>'"08.08.2040"',
+                '"№ посвідчення (сертиф.)"' =>'"222-2"',
+                '"Дата прийому"' =>'"09.09.2020"',
+                '"Підрозділ"' =>'"Кафедра"',
+                '"Посада в штатному розп."' =>'"Сімейний лікар"',
+                'group1' => 'groupnum',
+                'profile_tsmugroup' => 'groupnum',
+                'profile_tsmufaculty' => 'Schools.name',
+                'profile_tsmuspeciality' => 'Specials.name',
+                'profile_tsmusemester' => 'grade_level'
+            ])->contain([           //! For loading associations!
+                'Schools' => [
+                    'fields' => ['Schools.name']
+                ],
+                'Specials' => [
+                    'fields' => ['Specials.name']
+                ]
+            ]);
+            $data =json_decode(json_encode($data), true);
+            if (count($data)>0){
+                $Csv->exportCsv(ROOT.DS."webroot".DS."files/helsi_".$_SESSION['Auth']['User']['id'].".csv", array($data), $this->options);
+                return $this->redirect($_SERVER['domain']."/files/helsi_".$_SESSION['Auth']['User']['id'].".csv");
             }else{
                 $this->Flash->error(__('No users'));
             }

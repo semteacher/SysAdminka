@@ -48,6 +48,9 @@
                 <li>
                     <a href="/Views/lecturio"><i class="fa fa-fw fa-edit"></i>For Lecturio template</a>
                 </li>
+                <li>
+                    <a href="/Views/helsi"><i class="fa fa-fw fa-edit"></i>For Helsi template</a>
+                </li>
             </ul>
         </li>
         <li>
