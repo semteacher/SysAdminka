@@ -212,8 +212,17 @@ class ViewsController extends AppController
                 ]),
                 '"Ідентифікаційний код"' => 'student_id',
                 '"Прізвище"'=>'last_name',
-                '"Ім\'я По-батькові"'=>'first_name',
-                '"Стать"'=>'"Чоловіча"',
+                '"Ім\'я"'=>$data->func()->substring_index([
+                    'first_name' => 'literal',
+                    ' ',
+                    '1'
+                ]),
+				'"По-батькові"'=>$data->func()->substring_index([
+                    'first_name' => 'literal',
+                    ' ',
+                    '-1'
+                ]),
+                '"Стать"'=>'"жіноча"',
                 '"Дата народження"'=>'"05.05.1990"',
                 '"Телефон мобільний"' =>'"0501111112"',
                 '"Серія паспорта"' =>'"МС"',
@@ -239,7 +248,6 @@ class ViewsController extends AppController
                 '"Дата прийому"' =>'"01.09.2023"',
                 '"Підрозділ"' =>'"Поліклінічне відділення №1"',
                 '"Посада в штатному розп."' =>'"Лікар-терапевт"',
-                'group1' => 'groupnum',
                 'profile_tsmugroup' => 'groupnum',
                 'profile_tsmufaculty' => 'Schools.name',
                 'profile_tsmuspeciality' => 'Specials.name',
