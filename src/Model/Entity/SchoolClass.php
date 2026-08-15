@@ -4,9 +4,12 @@ namespace App\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * Class Entity.
+ * School class entity.
+ *
+ * `Class` became a reserved name in PHP 7, so the Classes table explicitly
+ * uses this entity name instead of CakePHP's default singular form.
  */
-class Class extends Entity
+class SchoolClass extends Entity
 {
 
     /**

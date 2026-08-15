@@ -5,17 +5,17 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": ">=5.4.16",
-        "cakephp/cakephp": "3.0.*-dev",
+        "php": "^7.4",
+        "cakephp/cakephp": "^3.10",
         "mobiledetect/mobiledetectlib": "2.*",
-        "cakephp/migrations": "dev-master",
+        "cakephp/migrations": "^2.3",
         "ext-json": "*",
         "ext-zip": "*"
     },
     "require-dev": {
         "d11wtq/boris": "1.0.*",
-        "cakephp/debug_kit": "3.0.*-dev",
-        "cakephp/bake": "dev-master"
+        "cakephp/debug_kit": "^3.23",
+        "cakephp/bake": "^1.12"
     },
     "suggest": {
         "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
@@ -35,6 +35,14 @@
     "scripts": {
         "post-install-cmd": "App\\Console\\Installer::postInstall"
     },
-    "minimum-stability" : "dev",
-    "prefer-stable": true
+    "minimum-stability" : "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "cakephp/plugin-installer": true
+        },
+        "platform": {
+            "php": "7.4.33"
+        }
+    }
 }
