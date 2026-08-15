@@ -29,7 +29,12 @@ class SpecialsControllerTest extends IntegrationTestCase
      */
     public function testIndex()
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->get('/specials');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Lorem ipsum dolor sit amet');
+        $this->assertResponseContains('data-page-length="30"');
+        $this->assertResponseNotContains('<div class="paginator">');
     }
 
     /**
