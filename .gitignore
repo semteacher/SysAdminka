@@ -2,6 +2,8 @@ tmp/*
 .idea/*
 logs/*
 webroot/files/*
+webroot/photo/*
+webroot/Google_key/*
 [Cc]onfig/core.php
 [Cc]onfig/database.php
 [Cc]onfig/app.php
@@ -15,3 +17,8 @@ app/[Cc]onfig/database.php
 !empty
 /src/Controller/select-u z asu.sql
 /logs
+*.bash_history
+*.install4j
+.java/*
+*.selected_editor
+/.idea/workspace.xml
