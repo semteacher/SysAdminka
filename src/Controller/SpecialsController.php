@@ -18,7 +18,10 @@ class SpecialsController extends AppController
      */
     public function index()
     {
-        $this->set('specials', $this->paginate($this->Specials));
+        // DataTables provides the paging, filtering, and sorting for this view.
+        // Give it the complete result set so its entry count and ordering apply
+        // to every speciality rather than only CakePHP's current page.
+        $this->set('specials', $this->Specials->find('all'));
     }
 
     /**

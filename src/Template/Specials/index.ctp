@@ -8,12 +8,12 @@
            data-page-length="30">
     <thead>
         <tr>
-            <th style="max-width:60px !important;" data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('special_id') ?></th>
-            <th data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('name') ?></th>
-            <th data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('code') ?></th>
-            <th style="max-width:60px !important;" data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('cont_id') ?>ID</th>
-            <th style="max-width:60px !important;" data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('pnsp_id') ?>ID</th>
-            <th style="max-width:60px !important;" data-filterable="text" data-sortable="true" ><?= $this->Paginator->sort('sp_id') ?>ID</th>
+            <th style="max-width:60px !important;" data-filterable="text" data-sortable="true"><?= __('Special Id') ?></th>
+            <th data-filterable="text" data-sortable="true"><?= __('Name') ?></th>
+            <th data-filterable="text" data-sortable="true"><?= __('Code') ?></th>
+            <th style="max-width:60px !important;" data-filterable="text" data-sortable="true"><?= __('Cont ID') ?></th>
+            <th style="max-width:60px !important;" data-filterable="text" data-sortable="true"><?= __('Pnsp ID') ?></th>
+            <th style="max-width:60px !important;" data-filterable="text" data-sortable="true"><?= __('Sp ID') ?></th>
             <th class="actions"><?= __('Actions') ?></th>
         </tr>
     </thead>
@@ -35,12 +35,4 @@
     <?php endforeach; ?>
     </tbody>
     </table>
-    <div class="paginator">
-        <ul class="pagination">
-            <?= $this->Paginator->prev('< ' . __('previous')) ?>
-            <?= $this->Paginator->numbers() ?>
-            <?= $this->Paginator->next(__('next') . ' >') ?>
-        </ul>
-        <p><?= $this->Paginator->counter() ?></p>
-    </div>
 </div>
