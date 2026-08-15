@@ -21,6 +21,7 @@ class ClassesTable extends Table
     public function initialize(array $config)
     {
         $this->table('classes');
+        $this->entityClass('App\\Model\\Entity\\SchoolClass');
         $this->belongsTo('Schools', [
             'foreignKey' => 'school_id'
         ]);
